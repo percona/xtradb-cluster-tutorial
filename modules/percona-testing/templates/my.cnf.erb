@@ -1,0 +1,15 @@
+[mysqld]
+datadir=/var/lib/mysql
+user=mysql
+log_error=error.log
+binlog_format=ROW
+wsrep_provider=/usr/lib64/libgalera_smm.so
+wsrep_cluster_address=gcomm://<%= joinip %>
+wsrep_sst_receive_address=<%= ipaddress_eth3 %>
+wsrep_slave_threads=2
+wsrep_cluster_name=trimethylxanthine
+wsrep_sst_method=rsync
+wsrep_node_name=<%= hostname %>
+innodb_locks_unsafe_for_binlog=1
+innodb_autoinc_lock_mode=2
+innodb_log_file_size=64M
