@@ -56,7 +56,8 @@ class percona-testing::config {
                 "mysql":
                         enable  => true,
                         ensure => running,
-			require => [ File['/etc/my.cnf'], Exec['disable-selinux'] ];
+			subscribe =>  Network::If['eth3'],
+			require => [ File['/etc/my.cnf'], Exec['disable-selinux'], Network::If['eth3'] ];
 	}
 }
 
