@@ -30,19 +30,18 @@ class percona-testing::packages {
 	}
 }
 
-class percona-testing::config {
+class percona-testing::config ($extraipaddr=undef) {
 	
 	if $hostname == "percona1" {
 		$joinip = " "
 	} else {
 		$joinip = "192.168.70.2"
 	}
-
 	file {
 		"/etc/my.cnf":
 			ensure  => present,
                         content => template("percona-testing/my.cnf.erb"),
-                        require => Package["MySQL-server"];
+			subscribe  => Network::If['eth3'],
 	}
 	
 	exec {
@@ -52,12 +51,14 @@ class percona-testing::config {
 			unless => "grep 0 /selinux/enforce",
 	}
 
+}
+
+class percona-testing::service {
+
 	service {
                 "mysql":
                         enable  => true,
                         ensure => running,
-			subscribe =>  Network::If['eth3'],
-			require => [ File['/etc/my.cnf'], Exec['disable-selinux'], Network::If['eth3'] ];
+			subscribe =>  File['/etc/my.cnf'], 
 	}
 }
-

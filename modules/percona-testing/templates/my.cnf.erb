@@ -5,7 +5,7 @@ log_error=error.log
 binlog_format=ROW
 wsrep_provider=/usr/lib64/libgalera_smm.so
 wsrep_cluster_address=gcomm://<%= joinip %>
-<% if has_variable?("ipaddress_eth3") then %>wsrep_sst_receive_address=<%= ipaddress_eth3 %> <% end %>
+<% if has_variable?("extraipaddr") then %>wsrep_sst_receive_address=<%= extraipaddr %> <% end %>
 wsrep_slave_threads=2
 wsrep_cluster_name=trimethylxanthine
 wsrep_sst_method=rsync
