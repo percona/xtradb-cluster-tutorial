@@ -17,7 +17,7 @@ class percona-testing::packages {
 	package {
 		"Percona-XtraDB-Cluster-server.$hardwaremodel":
             		alias => "MySQL-server",
-            		require => Yumrepo['percona-testing'],
+            		require => [ Yumrepo['percona-testing'], Package['MySQL-client'] ],
 			ensure => "installed";
 		"Percona-XtraDB-Cluster-client.$hardwaremodel":
             		alias => "MySQL-client",
@@ -32,13 +32,31 @@ class percona-testing::packages {
 
 class percona-testing::config {
 	
-	$joinip = "192.168.70.2"
+	if $hostname == "percona1" {
+		$joinip = " "
+	} else {
+		$joinip = "192.168.70.2"
+	}
+
 	file {
 		"/etc/my.cnf":
 			ensure  => present,
                         content => template("percona-testing/my.cnf.erb"),
-                        require => Package["MySQL-server"],
+                        require => Package["MySQL-server"];
+	}
+	
+	exec {
+		"disable-selinux":
+			path    => ["/usr/bin","/bin"],
+                	command => "echo 0 >/selinux/enforce",
+			unless => "grep 0 /selinux/enforce",
+	}
+
+	service {
+                "mysql":
+                        enable  => true,
+                        ensure => running,
+			require => [ File['/etc/my.cnf'], Exec['disable-selinux'] ];
 	}
 }
-
 
