@@ -41,6 +41,7 @@ class percona-testing::config ($extraipaddr=undef) {
 		"/etc/my.cnf":
 			ensure  => present,
                         content => template("percona-testing/my.cnf.erb"),
+			require  => Network::If['eth3'],
 			subscribe  => Network::If['eth3'],
 	}
 	
