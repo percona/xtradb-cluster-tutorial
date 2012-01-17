@@ -7,6 +7,7 @@ define network::if ($ip_add = '', $proto = 'dhcp', $ip_netmask = '', $ip_network
     
     exec {
         "/etc/init.d/network restart":
+		require => File["/etc/sysconfig/network-scripts/ifcfg-$name"],
 		unless  =>  "/sbin/ifconfig | grep $ip_add",
     }
 

@@ -42,7 +42,6 @@ class percona-testing::config ($extraipaddr=undef) {
 			ensure  => present,
                         content => template("percona-testing/my.cnf.erb"),
 			require  => Network::If['eth3'],
-			subscribe  => Network::If['eth3'],
 	}
 	
 	exec {
@@ -60,6 +59,6 @@ class percona-testing::service {
                 "mysql":
                         enable  => true,
                         ensure => running,
-			subscribe =>  File['/etc/my.cnf'], 
+			subscribe =>  [ File['/etc/my.cnf'], Network::If['eth3'] ],
 	}
 }
