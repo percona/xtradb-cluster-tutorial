@@ -9,8 +9,5 @@ class myhosts {
 		"percona3":
 			ensure	=> "present",
 			ip	=> "192.168.70.4";
-		"percona4":
-			ensure	=> "present",
-			ip	=> "192.168.70.5";
 	}
 }
