@@ -53,12 +53,12 @@ class percona-testing::config ($extraipaddr=undef) {
 
 }
 
-class percona-testing::service {
+class percona-testing::service ($ensure="running") {
 
 	service {
                 "mysql":
                         enable  => true,
-                        ensure => running,
+                        ensure => $ensure,
 			subscribe =>  [ File['/etc/my.cnf'], Network::If['eth3'] ],
 	}
 }
