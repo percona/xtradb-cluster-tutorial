@@ -13,3 +13,5 @@ And this is all, you have now 3 servers running Percona XtraDB Cluster !
 
 
 Note: SElinux is disabled, there is a selinux policy file included that allows the server to start but the other nodes aren't yet able to sync, I need to investigate...
+
+Note: Vagrantfile.8 is to use with vagrant 0.8.x and Vagrantfile needs vagrant 0.9.x
