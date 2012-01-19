@@ -4,6 +4,7 @@
 This Vagrant setup can be used to test Percona XtraDB Cluster (Percona Server with Galera)
 
 This is used with Centos 6 x86_64, the base box used has multiple interface, eth3 is the nic used for the galera replication.
+That base box can be retrieved on http://dl.dropbox.com/u/11697684/centos6.box.bz2
 
 
 How to use ?

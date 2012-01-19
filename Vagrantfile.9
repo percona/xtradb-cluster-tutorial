@@ -11,6 +11,7 @@ Vagrant::Config.run do |config|
 	#percona1_config.vm.network("192.168.70.2")
 	#percona1_config.vm.boot_mode = :gui
 	percona1_config.vm.customize ["modifyvm", :id, "--memory", "256"]
+	percona1_config.vm.network :hostonly, "192.168.70.2", :adapter => 2
 	percona1_config.vm.provision :puppet do |percona1_puppet|
 		percona1_puppet.pp_path = "/tmp/vagrant-puppet"
 		percona1_puppet.manifests_path = "manifests"
