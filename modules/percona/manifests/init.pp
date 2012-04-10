@@ -13,17 +13,10 @@ class percona::repository {
 
 }
 
-class percona::packages {
+
+class percona::common {
 
 	package {
-		"Percona-Server-server-55.$hardwaremodel":
-            		alias => "MySQL-server",
-            		require => Yumrepo['percona'],
-			ensure => "installed";
-		"Percona-Server-client-55.$hardwaremodel":
-            		alias => "MySQL-client",
-            		require => Yumrepo['percona'],
-			ensure => "installed";		
 		"mysql-libs":
 			ensure => "absent";		
 		"Percona-Server-shared-compat":
@@ -38,4 +31,35 @@ class percona::packages {
 			require => Package['MySQL-server'],
 	}
 }
+
+class percona::server {
+
+	package {
+		"Percona-Server-server-55.$hardwaremodel":
+            		alias => "MySQL-server",
+            		require => Yumrepo['percona'],
+			ensure => "installed";
+		"Percona-Server-client-55.$hardwaremodel":
+            		alias => "MySQL-client",
+            		require => Yumrepo['percona'],
+			ensure => "installed";		
+	}
+}
+
+class percona::cluster {
+
+        package {
+                "Percona-XtraDB-Cluster-server.$hardwaremodel":
+                        alias => "MySQL-server",
+                        require => [ Yumrepo['percona-testing'], Package['MySQL-client'] ],
+                        ensure => "installed";
+                "Percona-XtraDB-Cluster-client.$hardwaremodel":
+                        alias => "MySQL-client",
+                        require => Yumrepo['percona-testing'],
+                        ensure => "installed";
+                "rsync":
+                        ensure => "present";
+        }
+}
+
 
