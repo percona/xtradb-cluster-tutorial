@@ -1,4 +1,4 @@
-class percona::cluster::config ($extraipaddr=undef) {
+class percona::cluster::config {
 
         if $hostname == "percona1" {
                 $joinip = " "

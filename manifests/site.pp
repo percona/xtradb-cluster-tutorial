@@ -1,33 +1,30 @@
 node percona1 {
 	include percona::repository
-	include percona::cluster::packages
-	include percona::cluster::service
+	include percona::cluster
 	include myhosts
 
-	Class['percona::repository'] -> Class['percona::cluster::packages'] -> Class['percona::cluster::config'] ->  Class['percona::cluster::service']
+	Class['percona::repository'] -> Class['percona::cluster'] -> Class['galera::glb']
 
-	class {'percona::cluster::config': extraipaddr => $ipaddress_eth1 }
+	class {
+		'galera::glb':
+			glb_list_backend => "192.168.70.2:3306:1 192.168.70.3:3306:1 192.168.70.4:3306"
+	}
 }
 
 node percona2 {
 	include percona::repository
-	include percona::cluster::packages
-	include percona::cluster::service
+	include percona::cluster
 	include myhosts
 
-	Class['percona::repository'] -> Class['percona::cluster::packages'] -> Class['percona::cluster::config'] ->  Class['percona::cluster::service']
+	Class['percona::repository'] -> Class['percona::cluster']
 
-	class {'percona::cluster::config': extraipaddr => $ipaddress_eth1 }
 }
 
 node percona3 {
 	include percona::repository
-	include percona::cluster::packages
-	include percona::cluster::service
+	include percona::cluster
 	include myhosts
 
-	Class['percona::repository'] -> Class['percona::cluster::packages'] -> Class['percona::cluster::config'] ->  Class['percona::cluster::service']
-
-	class {'percona::cluster::config': extraipaddr => $ipaddress_eth1 }
+	Class['percona::repository'] -> Class['percona::cluster']
 }
 

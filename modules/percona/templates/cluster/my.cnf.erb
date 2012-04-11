@@ -5,8 +5,8 @@ log_error=error.log
 binlog_format=ROW
 wsrep_provider=/usr/lib64/libgalera_smm.so
 wsrep_cluster_address=gcomm://<%= joinip %>
-<% if has_variable?("extraipaddr") then %>wsrep_sst_receive_address=<%= extraipaddr %>
-wsrep_node_incoming_address=<%= extraipaddr %> <% end %>
+wsrep_sst_receive_address=<%= ipaddress_eth1 %>
+wsrep_node_incoming_address=<%= ipaddress_eth1 %> 
 wsrep_slave_threads=2
 wsrep_cluster_name=trimethylxanthine
 wsrep_sst_method=rsync
@@ -14,6 +14,7 @@ wsrep_node_name=<%= hostname %>
 innodb_locks_unsafe_for_binlog=1
 innodb_autoinc_lock_mode=2
 innodb_log_file_size=64M
+bind-address=<%= ipaddress_eth1 %>
 
 [mysql]
 prompt="<%=hostname %> mysql> "
