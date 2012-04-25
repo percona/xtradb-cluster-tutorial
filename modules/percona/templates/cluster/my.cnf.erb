@@ -9,7 +9,8 @@ wsrep_sst_receive_address=<%= ipaddress_eth1 %>
 wsrep_node_incoming_address=<%= ipaddress_eth1 %> 
 wsrep_slave_threads=2
 wsrep_cluster_name=trimethylxanthine
-wsrep_sst_method=rsync
+#wsrep_sst_method=rsync
+wsrep_sst_method=xtrabackup
 wsrep_node_name=<%= hostname %>
 innodb_locks_unsafe_for_binlog=1
 innodb_autoinc_lock_mode=2
@@ -17,4 +18,5 @@ innodb_log_file_size=64M
 bind-address=<%= ipaddress_eth1 %>
 
 [mysql]
+user=root
 prompt="<%=hostname %> mysql> "
