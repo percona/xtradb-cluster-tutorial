@@ -2,7 +2,8 @@ class percona::cluster::config {
 
         if $hostname == "percona1" {
               # Percona1 can't join itself, so if this node gets wacked out, it tries to talk to percona2
-                $joinip = "192.168.70.3"
+                # $joinip = "192.168.70.3"
+                $joinip = " "
         } else {
             # All other nodes join percona1
                 $joinip = "192.168.70.2"
