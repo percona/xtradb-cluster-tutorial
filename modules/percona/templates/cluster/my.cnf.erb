@@ -1,10 +1,12 @@
+[mysqld_safe]
+wsrep_urls=gcomm://192.168.70.2:4567,gcomm://192.168.70.3:4567,gcomm://192.168.70.4:4567,gcomm://
+
 [mysqld]
 datadir=/var/lib/mysql
 user=mysql
 log_error=error.log
 binlog_format=ROW
 wsrep_provider=/usr/lib64/libgalera_smm.so
-wsrep_cluster_address=gcomm://<%= joinip %>
 wsrep_sst_receive_address=<%= ipaddress_eth1 %>
 wsrep_node_incoming_address=<%= ipaddress_eth1 %> 
 wsrep_slave_threads=2
