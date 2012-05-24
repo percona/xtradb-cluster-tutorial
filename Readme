@@ -15,9 +15,12 @@ vagrant up percona3
 And this is all, you have now 3 servers running Percona XtraDB Cluster !
 
 
-These recipes also install GLB (Galera Load Balancer) on percona1.
+These recipes also install HAProxy on percona1.  One for writes (single cluster node) and one for reads (rr of all cluster nodes).
 
-You can read more on shinguz's post : http://www.fromdual.com/mysql-and-galera-load-balancer
+See cluster status: http://192.168.70.2:9999/
+
+Writes: 192.168.70.2:4306
+Reads: 192.168.70.2:5306
 
 
 Note: SElinux is disabled, there is a selinux policy file included that allows the server to start but the other nodes aren't yet able to sync, I need to investigate...
