@@ -11,6 +11,7 @@ class xinet::config {
     user     => "clustercheckuser",
     password => "clustercheckpassword!",
     database => "mysql",
-    priv    => ["process_priv"]
+    priv    => ["process_priv"],
+    require => Class['percona::cluster::service']
   }
 }
