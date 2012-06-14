@@ -10,10 +10,11 @@ binlog_format=ROW
 
 wsrep_cluster_name=trimethylxanthine
 wsrep_node_name=<%= hostname %>
+wsrep_node_address=<%= ipaddress_eth1 %>
+
 wsrep_provider=/usr/lib64/libgalera_smm.so
 
 wsrep_sst_method=xtrabackup
-wsrep_sst_receive_address=<%= ipaddress_eth1 %>
 
 wsrep_slave_threads=2
 
