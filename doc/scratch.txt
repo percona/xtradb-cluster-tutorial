@@ -1,0 +1,2 @@
+# Keep your virtual box guest additions updated automatically
+vagrant gem install vagrant-vbguest
