@@ -34,4 +34,12 @@ class misc {
 				creates => "/root/bin/myq_status",
 				path => ['/bin','/usr/bin','/usr/local/bin'];
 	}
+	
+	file {
+		"/usr/local/bin/baseline.sh":
+			owner => 'root',
+			group => 'root',
+			mode => 0554,
+			source => "/vagrant/modules/misc/files/baseline.sh";
+	}
 }
