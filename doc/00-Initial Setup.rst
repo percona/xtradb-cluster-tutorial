@@ -6,12 +6,12 @@ TL;DR
 
 It's a **very** good idea to do these steps *before* the tutorial session because conference WiFi tends to be unreliable at best.  At a minimum, at least do up through the step to download the centos6 box, which is several hundred MB.
 
-1. Download and install Virtualbox from here:: (current version: 4.1.18): https://www.virtualbox.org/wiki/Downloads
-1. Download and install Vagrant from here:  (current version 1.0.3): http://vagrantup.com
-1. Keep your virtual box guest additions updated automatically: ``host> vagrant gem install vagrant-vbguest``
-1. Download centos6 vagrant box: (310MB) (optional, `vagrant up` will do this automatically): ``vagrant box add centos6 https://dl.dropbox.com/u/7225008/Vagrant/CentOS-6.3-x86_64-minimal.box``
-1. Get a copy of this git repository: ``host> git clone https://github.com/jayjanssen/pxc-tutorial``
-1. Run ``vagrant up``::
+#. Download and install Virtualbox from here:: (current version: 4.#.18): https://www.virtualbox.org/wiki/Downloads
+#. Download and install Vagrant from here:  (current version #.0.3): http://vagrantup.com
+#. Keep your virtual box guest additions updated automatically: ``host> vagrant gem install vagrant-vbguest``
+#. Download centos6 vagrant box: (310MB) (optional, `vagrant up` will do this automatically): ``vagrant box add centos6 https://dl.dropbox.com/u/7225008/Vagrant/CentOS-6.3-x86_64-minimal.box``
+#. Get a copy of this git repository: ``host> git clone https://github.com/jayjanssen/pxc-tutorial``
+#. Run ``vagrant up``::
 
 	cd pxc-tutorial
 	vagrant up
@@ -23,12 +23,12 @@ What does this actually do?
 
 The basic flow of what's happening above is:
 
-1. Downloading virtualbox -- this can run virtual machines on your laptop and supports Linux, Mac, and Windows (and is free).
-1. Installing the Vagrant tool -- This tool knows how to setup and manipulate a set of VirtualBox VMs using something called a *VagrantFile*, which is somewhat analogous to a *MakeFile*.
-1. Virtualbox VMs use tools installed on the GuestOS to do things like share folders with the host machine (i.e., your laptop).  This step allows Vagrant to keep those tools up to date with whatever version of VirtualBox you have.
-1. Vagrant uses *boxes* for baseline OS installs to build on.  This step downloads a CentOS 6.3 minimal image and names it as the box `centos6`.  *VagrantFiles* can refer to this box when they want to build a VM.
-1. You will need a local copy of all the code and configuration in this git repository on your local machine.  If you don't have/like git, you can download it a full tarball/zip file from github.
-1. `vagrant up` sets up all the cluster nodes and PXC according to the rules found in the VagrantFile (and subsequent Puppet configuration).  If all goes correctly, you should have a working 3 node PXC cluster.
+#. Downloading virtualbox -- this can run virtual machines on your laptop and supports Linux, Mac, and Windows (and is free).
+#. Installing the Vagrant tool -- This tool knows how to setup and manipulate a set of VirtualBox VMs using something called a *VagrantFile*, which is somewhat analogous to a *MakeFile*.
+#. Virtualbox VMs use tools installed on the GuestOS to do things like share folders with the host machine (i.e., your laptop).  This step allows Vagrant to keep those tools up to date with whatever version of VirtualBox you have.
+#. Vagrant uses *boxes* for baseline OS installs to build on.  This step downloads a CentOS 6.3 minimal image and names it as the box `centos6`.  *VagrantFiles* can refer to this box when they want to build a VM.
+#. You will need a local copy of all the code and configuration in this git repository on your local machine.  If you don't have/like git, you can download it a full tarball/zip file from github.
+#. `vagrant up` sets up all the cluster nodes and PXC according to the rules found in the VagrantFile (and subsequent Puppet configuration).  If all goes correctly, you should have a working 3 node PXC cluster.
 
 
 Things you can do with vagrant
