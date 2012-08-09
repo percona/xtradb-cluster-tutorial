@@ -4,7 +4,7 @@ Progressive PXC Setup
 Assumptions
 ------------
 
-- `vagrant up` complete and successful
+- ``vagrant up`` complete and successful
 
 
 Step 0: baseline the nodes
@@ -15,6 +15,7 @@ We are assuming here that you have successfully run `vagrant up` and created the
 	host> ./baseline.pl
 
 This will stop mysql on all your nodes, remove the my.cnf and wipe the datadirs.
+
 
 Step 1: Setup node1 as standalone MySQL
 ---------------------------------------
@@ -68,6 +69,7 @@ Because this server does contain the Galera patch, we can query the cluster stat
 	| wsrep_cluster_status | Disconnected |
 	+----------------------+--------------+
 	1 row in set (0.00 sec)
+
 
 Step 2: Load some baseline data
 -------------------------------
@@ -165,13 +167,13 @@ node1:/etc/my.cnf::
 Let's look at each option and what it means:
 
 wsrep_urls
-	a list of urls to try to find an existing cluster.  In this case we want to start a new cluster, so we specify an empty `gcomm://`.
+	a list of urls to try to find an existing cluster.  In this case we want to start a new cluster, so we specify an empty ``gcomm://``.
 
 wsrep_cluster_name
 	a unique identifier for this cluster
 
 wsrep_cluster_address
-	This is an address for the node to connect to the cluster.  We leave this empty because we now use the wsrep_urls to help us discover other cluster nodes.  If we do not explicitly leave this blank, it gets set to 'gcomm://', which, of course, starts a new cluster.  We'd rather control that via the `wsrep_urls` variable.
+	This is an address for the node to connect to the cluster.  We leave this empty because we now use the wsrep_urls to help us discover other cluster nodes.  If we do not explicitly leave this blank, it gets set to ``gcomm://``, which, of course, starts a new cluster.  We'd rather control that via the ``wsrep_urls`` variable.
 
 wsrep_node_name
 	a unique identifier for this node
@@ -282,6 +284,18 @@ Note the following::
 
 The `grastate.dat` is the state file for Galera, and initializing means that we have taken this mysql database (everything we already loaded) and made it the baseline for this cluster.  
 
+Let's check the status of our node::
+
+	node1 mysql> show status like 'wsrep_local_state_comment';
+	+---------------------------+------------+
+	| Variable_name             | Value      |
+	+---------------------------+------------+
+	| wsrep_local_state_comment | Synced (6) |
+	+---------------------------+------------+
+	1 row in set (0.00 sec)
+
+So we can see that we have created a cluster.  Also check the values of ``show status like 'wsrep%';``, and verify our sample data is still present.
+
 
 Step 4: Setup and add node2
 --------------------------
@@ -336,9 +350,9 @@ This tells our node to try to find an existing cluster on these targets.  If it 
 
 	120809 22:06:35 mysqld_safe mysqld from pid file /var/lib/mysql/node2.pid ended
 
-We get an error.  The error.log tells us clearly that none of our connections in `wsrep_urls` was reachable.  In an existing cluster, we don't want another cluster to be formed, so this is the correct behavior.
+We get an error.  The error.log tells us clearly that none of our connections in ``wsrep_urls`` was reachable.  In an existing cluster, we don't want another cluster to be formed, so this is the correct behavior.
 
-Now, let's add node1's ip to our `wsrep_urls` on node2::
+Now, let's add node1's ip to our ``wsrep_urls`` on node2::
 
 	wsrep_urls=gcomm://192.168.70.2:4567,gcomm://192.168.70.3:4567,gcomm://192.168.70.4:4567
 
@@ -474,7 +488,51 @@ wsrep_connected
 wsrep_ready
 	Ready to handle SQL work.
 
-Check node1 and confirm the state is the same.
+Check node1 and confirm the state is the same.  Also, we can confirm that the data on node2 was correctly transferred from node1::
 
+	node2 mysql> use sakila;
+	Reading table information for completion of table and column names
+	You can turn off this feature to get a quicker startup with -A
+	
+	Database changed
+	node2 mysql> show tables;
+	+----------------------------+
+	| Tables_in_sakila           |
+	+----------------------------+
+	| actor                      |
+	| actor_info                 |
+	| address                    |
+	| category                   |
+	| city                       |
+	| country                    |
+	| customer                   |
+	| customer_list              |
+	| film                       |
+	| film_actor                 |
+	| film_category              |
+	| film_list                  |
+	| film_text                  |
+	| inventory                  |
+	| language                   |
+	| nicer_but_slower_film_list |
+	| payment                    |
+	| rental                     |
+	| sales_by_film_category     |
+	| sales_by_store             |
+	| staff                      |
+	| staff_list                 |
+	| store                      |
+	+----------------------------+
+	23 rows in set (0.00 sec)
+	
+	node2 mysql> select count(*) from actor;
+	+----------+
+	| count(*) |
+	+----------+
+	|      200 |
+	+----------+
+	1 row in set (0.00 sec)
+
+Verify this matches node1.
 
 
