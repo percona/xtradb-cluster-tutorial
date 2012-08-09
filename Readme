@@ -8,14 +8,14 @@ This box includes puppet, firewall is disabled and has a nice motd ;)
 
 How to use ?
 
-vagrant up percona1
-vagrant up percona2
-vagrant up percona3
+vagrant up node1
+vagrant up node2
+vagrant up node3
 
 And this is all, you have now 3 servers running Percona XtraDB Cluster !
 
 
-These recipes also install HAProxy on percona1.  One for writes (single cluster node) and one for reads (rr of all cluster nodes).
+These recipes also install HAProxy on node1.  One for writes (single cluster node) and one for reads (rr of all cluster nodes).
 
 See cluster status: http://192.168.70.2:9999/
 

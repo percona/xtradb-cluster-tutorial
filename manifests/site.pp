@@ -1,9 +1,9 @@
-node percona1 {
+node node1 {
 	include percona::repository
 	include percona::cluster
 	include percona::toolkit	
 	include xinet
-	include myhosts
+	include misc
 	include haproxy
 
 	Class['percona::repository'] -> Class['percona::cluster']
@@ -11,24 +11,24 @@ node percona1 {
 
 }
 
-node percona2 {
+node node2 {
 	include percona::repository
 	include percona::cluster
 	include percona::toolkit	
 	include xinet
-	include myhosts
+	include misc
 
 	Class['percona::repository'] -> Class['percona::cluster']
 	Class['percona::repository'] -> Class['percona::toolkit']
 
 }
 
-node percona3 {
+node node3 {
 	include percona::repository
 	include percona::cluster
 	include percona::toolkit	
   include xinet
-	include myhosts
+	include misc
 
 	Class['percona::repository'] -> Class['percona::cluster']
 	Class['percona::repository'] -> Class['percona::toolkit']
