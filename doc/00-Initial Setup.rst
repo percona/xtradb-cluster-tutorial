@@ -56,19 +56,32 @@ Things you can do with vagrant
 `vagrant destroy -f`
 	Forcibly destroy all the VMs Vagrant has setup in this working directory (doesn't affect other Vagrant projects).  Using this and another `vagrant up` you can reset back to a baseline config, although it's usually not necessary to go this far.
 
+
+To log into a node
+------------------
+::
+
+	host> vagrant ssh node2
+	Last login: Thu Aug  9 18:34:53 2012 from 10.0.2.2
+	[vagrant@node2 ~]$ sudo -i
+	[root@node2 ~]#
+
 Notes
 ------
 
 - Virtualbox *might* crash your laptop every once in a while.  If you don't like it, ask Oracle for your money back.
-
-
-
 
 Terms and conventions
 ---------------------
 
 PXC
 	Percona XtraDB Cluster. http://www.percona.com/doc/percona-xtradb-cluster/index.html
+
+Galera
+	The technology on which PXC is based.  PXC is basically Galera + Percona Server.  See http://codership.com for more info.
+
+wsrep
+	Short for 'Work-Set Replicattor'.  You'll see this referred to in mysql settings (SHOW VARIABLES and SHOW STATUS) to for Galera items.
 
 VirtualBox
 	Oracle's Free Virtual Machine tool (analogous to VMware).  http://www.virtualbox.org
@@ -78,5 +91,8 @@ Vagrant
 
 `host>` 
 	means your laptop from the root directory of the git repository
+	
+screen#
+	Often the walkthrough instructions assume you have multiple windows or screens open so you can watch multiple things at once.  This can be a physically separate terminal window, or a unix `screen` window if you are comfortable with it.  Note that `screen` is preinstalled on the nodes for your convenience.
 
 
