@@ -18,6 +18,7 @@ class misc {
 		'screen': ensure => 'present';
 		'telnet': ensure => 'present';
 		'man': ensure => 'present';
+		'unzip': ensure => 'present';
 	}
 	
 	file {
@@ -34,7 +35,7 @@ class misc {
 				creates => "/root/bin/myq_status",
 				path => ['/bin','/usr/bin','/usr/local/bin'];
 	}
-	
+
 	file {
 		"/usr/local/bin/baseline.sh":
 			owner => 'root',
@@ -42,4 +43,12 @@ class misc {
 			mode => 0554,
 			source => "/vagrant/modules/misc/files/baseline.sh";
 	}
+	
+	exec {
+			"wget http://downloads.mysql.com/docs/sakila-db.zip":
+				cwd => "/root",
+				creates => "/root/sakila-db.zip",
+				path => ['/bin','/usr/bin','/usr/local/bin'];
+	}
+	
 }
