@@ -6,17 +6,13 @@ TL;DR
 
 It's a **very** good idea to do these steps *before* the tutorial session because conference WiFi tends to be unreliable at best.  At a minimum, at least do up through the step to download the centos6 box, which is several hundred MB.
 
-1. Download and install Virtualbox from here:: (current version: 4.1.18)::
-	https://www.virtualbox.org/wiki/Downloads
-1. Download and install Vagrant from here:  (current version 1.0.3)::
-	http://vagrantup.com
-1. Keep your virtual box guest additions updated automatically::
-	host> vagrant gem install vagrant-vbguest
-1. Download centos6 vagrant box: (310MB) (optional, `vagrant up` will do this automatically)::
-	vagrant box add centos6 https://dl.dropbox.com/u/7225008/Vagrant/CentOS-6.3-x86_64-minimal.box	
-1. Get a copy of this git repository::
-	git clone https://github.com/jayjanssen/pxc-tutorial
-1. Run `vagrant up`::
+1. Download and install Virtualbox from here:: (current version: 4.1.18): https://www.virtualbox.org/wiki/Downloads
+1. Download and install Vagrant from here:  (current version 1.0.3): http://vagrantup.com
+1. Keep your virtual box guest additions updated automatically: ``host> vagrant gem install vagrant-vbguest``
+1. Download centos6 vagrant box: (310MB) (optional, `vagrant up` will do this automatically): ``vagrant box add centos6 https://dl.dropbox.com/u/7225008/Vagrant/CentOS-6.3-x86_64-minimal.box``
+1. Get a copy of this git repository: ``host> git clone https://github.com/jayjanssen/pxc-tutorial``
+1. Run ``vagrant up``::
+
 	cd pxc-tutorial
 	vagrant up
 	
@@ -81,7 +77,7 @@ Galera
 	The technology on which PXC is based.  PXC is basically Galera + Percona Server.  See http://codership.com for more info.
 
 wsrep
-	Short for 'Work-Set Replicattor'.  You'll see this referred to in mysql settings (SHOW VARIABLES and SHOW STATUS) to for Galera items.
+	Short for 'Work-Set Replicator'.  You'll see this referred to in mysql settings (SHOW VARIABLES and SHOW STATUS) to for Galera items.
 
 VirtualBox
 	Oracle's Free Virtual Machine tool (analogous to VMware).  http://www.virtualbox.org
