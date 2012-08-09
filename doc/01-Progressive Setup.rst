@@ -1,6 +1,8 @@
 Progressive PXC Setup
 =====================
 
+.. contents::
+
 Assumptions
 ------------
 
