@@ -141,9 +141,9 @@ If you can't find the sakila-db.zip, download it, it's not very large::
 Step 3: Convert node1 to a cluster
 ----------------------------------
 
-So now node1 is setup as a baseline MySQL server with a small sample database loaded.  From here, we want to get ready to migrate to PXC.  We first need to add the necessary configuration to our my.cnf to prepare this node to be part of our cluster.  Here's what we need to add, be sure to add it to the correct section(s) our config:
+So now node1 is setup as a baseline MySQL server with a small sample database loaded.  From here we want to get ready to migrate to PXC.  We first need to add the necessary configuration to our my.cnf to prepare this node to be part of our cluster.  Here's what we need to add, be sure to add it to the correct section(s) our config:
 
-node1:/etc/my.cnf::
+``node1:/etc/my.cnf``::
 
 	[mysqld_safe]
 	wsrep_urls=gcomm://
@@ -163,6 +163,7 @@ node1:/etc/my.cnf::
 	
 	innodb_locks_unsafe_for_binlog=1
 	innodb_autoinc_lock_mode=2
+	...
 
 Let's look at each option and what it means:
 
@@ -173,7 +174,7 @@ wsrep_cluster_name
 	a unique identifier for this cluster
 
 wsrep_cluster_address
-	This is an address for the node to connect to the cluster.  We leave this empty because we now use the wsrep_urls to help us discover other cluster nodes.  If we do not explicitly leave this blank, it gets set to ``gcomm://``, which, of course, starts a new cluster.  We'd rather control that via the ``wsrep_urls`` variable.
+	This is an address for the node to connect to the cluster.  We leave this empty because we now use ``wsrep_urls`` to help us discover other cluster nodes.  If we do not explicitly leave this blank, it gets set to ``gcomm://``, which, of course, starts a new cluster.  We'd rather control that via the ``wsrep_urls`` variable.
 
 wsrep_node_name
 	a unique identifier for this node
@@ -185,7 +186,7 @@ wsrep_provider
 	path to libgalera
 
 wsrep_sst_method
-	The method we use to do full state transfers between nodes
+	The method we use to do full state transfers between nodes.  Xtrabackup in this case.
 
 wsrep_slave_threads
 	How many threads can apply worksets in parallel on this node
@@ -334,6 +335,10 @@ node2:/etc/my.cnf::
 	[client]
 	user=root
 
+
+Connecting to an unreachable cluster
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 This configuration sets up node2 to be a cluster node, but it's missing how to connect to the existing cluster.  To do that we add these lines::
 
 	[mysqld_safe]
@@ -351,6 +356,10 @@ This tells our node to try to find an existing cluster on these targets.  If it 
 	120809 22:06:35 mysqld_safe mysqld from pid file /var/lib/mysql/node2.pid ended
 
 We get an error.  The error.log tells us clearly that none of our connections in ``wsrep_urls`` was reachable.  In an existing cluster, we don't want another cluster to be formed, so this is the correct behavior.
+
+
+Connecting to a reachable cluster
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Now, let's add node1's ip to our ``wsrep_urls`` on node2::
 
