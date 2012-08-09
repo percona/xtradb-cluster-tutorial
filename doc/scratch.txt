@@ -1,25 +1,11 @@
-# Download and install Vagrant from here:  (current version 1.0.3)
-http://vagrantup.com
-
-# Keep your virtual box guest additions updated automatically
-vagrant gem install vagrant-vbguest
-
-# Download centos6 vagrant box: (310MB)
-vagrant box add centos6 https://dl.dropbox.com/u/7225008/Vagrant/CentOS-6.3-x86_64-minimal.box	
-
-# Clone or just download git repository
-https://github.com/jayjanssen/percona-cluster
 
 
+# initial vs working puppet
+- set a manifest file for VagrantFile
+- maybe just run script / different manifest file to shutdown all the services on the nodes and clear the datadirs and my.cnf?
 
 
-
-notice: /Stage[main]/Percona::Toolkit/Package[perl-Time-HiRes]/ensure: created
-err: /Stage[main]/Haproxy::Packages/Package[haproxy]/ensure: change from absent to present failed: Execution of '/usr/bin/yum -d 0 -e 0 -y install haproxy' returned 1: Error: Nothing to do
-
-
-disable iptables
-- install screen?
-- install tmux?
-- install telnet?
-- install myq_gadgets
+# plan for getting people setup:
+   - install/setup document
+   - centos box on usb sticks at the meeting
+   
