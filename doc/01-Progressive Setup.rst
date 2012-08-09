@@ -1,9 +1,7 @@
 Progressive PXC Setup
 =====================
 
-.. contents:: Table of Contents
-	:local: 1
-	:backlinks: entry
+.. contents:: :local: 1 :backlinks: entry
 
 Assumptions
 ------------
