@@ -24,7 +24,7 @@ First we will setup a single node as a standalone MySQL server without any clust
 
 Let's create a my.cnf file and add some basic configuration so we can startup our server. 
 
-node1:/etc/my.cnf::
+``node1:/etc/my.cnf``::
 
 	[mysqld]
 	datadir=/var/lib/mysql
