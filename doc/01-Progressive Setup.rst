@@ -464,7 +464,13 @@ When we start mysql now::
 	120809 22:15:42 [Note] WSREP: Synchronized with group, ready for connections
 	120809 22:15:42 [Note] WSREP: wsrep_notify_cmd is not defined, skipping notification.
 
-We can see here (with a bit of verbosity) that our node did an xtrabackup SST that took about a minute.  Let's check the node status::
+We can see here (with a bit of verbosity) that our node did an xtrabackup SST that took about a minute. 
+
+
+Checking two node cluster status
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Let's check the node status::
 
 	node2 mysql> show status like 'wsrep%';
 	+----------------------------+--------------------------------------+
