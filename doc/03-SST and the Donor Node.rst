@@ -1,4 +1,4 @@
-SST and the Donor node
+State Snapshot Transfer (SST) and the Donor node
 ======================
 
 .. contents:: 
