@@ -108,3 +108,36 @@ screen#
 	Often the walkthrough instructions assume you have multiple windows or screens open so you can watch multiple things at once.  This can be a physically separate terminal window, or a unix `screen` window if you are comfortable with it.  Note that `screen` is preinstalled on the nodes for your convenience.
 
 
+Running pt-heartbeat
+---------------------
+
+I use pt-heartbeat in my PXC testing to show when there are replication hiccups and delays.  Due to a limitation of pt-heartbeat, we must create a legacy version of the heartbeat table that will work with PXC::
+
+	node2 mysql> create schema percona;
+	Query OK, 1 row affected (0.00 sec)
+
+	node2 mysql> use percona;
+	Database changed
+	node2 mysql> CREATE TABLE heartbeat (
+	    ->   id int NOT NULL PRIMARY KEY,
+	    ->   ts datetime NOT NULL
+	    -> );
+	Query OK, 0 rows affected (0.01 sec)
+	
+Now, start pt-heartbeat on node2::
+
+	[root@node2 ~]# pt-heartbeat --update --database percona
+	
+One node1, let's monitor the heartbeat::
+
+	[root@node1 ~]# pt-heartbeat --monitor --database percona
+	   0s [  0.00s,  0.00s,  0.00s ]
+	   0s [  0.00s,  0.00s,  0.00s ]
+	   0s [  0.00s,  0.00s,  0.00s ]
+	   0s [  0.00s,  0.00s,  0.00s ]
+	   0s [  0.00s,  0.00s,  0.00s ]
+	   0s [  0.00s,  0.00s,  0.00s ]
+	   0s [  0.00s,  0.00s,  0.00s ]
+	   0s [  0.00s,  0.00s,  0.00s ]
+
+This output will show us if there are any delays in the heartbeat compared with the current time.  
