@@ -1,10 +1,3 @@
-
-
-# initial vs working puppet
-- set a manifest file for VagrantFile
-- maybe just run script / different manifest file to shutdown all the services on the nodes and clear the datadirs and my.cnf?
-
-
 # plan for getting people setup:
    - install/setup document
    - centos box on usb sticks at the meeting

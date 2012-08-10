@@ -582,9 +582,10 @@ This shows us a nice summarization of some ``wsrep%`` variables in near-realtime
 - This node (node1) belongs to the ``Prim`` (Primary) cluster; that is, the cluster with quorum.
 - This node is ready
 
+It is recommended that you run ``myq_status -t 1 wsrep`` on each node in a terminal window (or windows) that you can easy glance at for the remainder of this tutorial.  This will show you the status of the cluster at a glance.
 
 
 Step 6: Add node3
 ---------------------------------
 
-You should know enough now to add node3 to the cluster
+You should know enough now to add node3 to the cluster at this point.  
