@@ -2,3 +2,6 @@
    - install/setup document
    - centos box on usb sticks at the meeting
    
+
+05- Node failure
+   - need anyEvent script that will do pt-heartbeat updates, and print output if it is ever delayed longer than n milliseconds.
