@@ -8,7 +8,7 @@ Cluster Experimentation
 Assumptions
 -----------
 
-- You have completed the `Progressive Setup <01-Progressive Setup.rst>`_ steps successfully and have a working three node cluster.  If you want to do these steps without successfully setting up the cluster yourself, execute::
+- You have completed the `Progressive Setup <01-Progressive%20Setup.rst>`_ steps successfully and have a working three node cluster.  If you want to do these steps without successfully setting up the cluster yourself, execute::
 
 	host> vagrant provision
 
