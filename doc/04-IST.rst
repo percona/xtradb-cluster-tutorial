@@ -19,7 +19,20 @@ The IST configuration is buried in the ``wsrep_provider_options`` MySQL variable
 	node3 mysql> show variables like 'wsrep_provider_options'\G
 	*************************** 1. row ***************************
 	Variable_name: wsrep_provider_options
-	        Value: base_host = 192.168.70.4; base_port = 4567; evs.debug_log_mask = 0x1; evs.inactive_check_period = PT0.5S; evs.inactive_timeout = PT15S; evs.info_log_mask = 0; evs.install_timeout = PT15S; evs.join_retrans_period = PT0.3S; evs.keepalive_period = PT1S; evs.max_install_timeouts = 1; evs.send_window = 4; evs.stats_report_period = PT1M; evs.suspect_timeout = PT5S; evs.use_aggregate = true; evs.user_send_window = 2; evs.version = 0; evs.view_forget_timeout = PT5M; gcache.dir = /var/lib/mysql/; gcache.keep_pages_size = 0; gcache.mem_size = 0; gcache.name = /var/lib/mysql//galera.cache; gcache.page_size = 128M; gcache.size = 128M; gcs.fc_debug = 0; gcs.fc_factor = 0.5; gcs.fc_limit = 16; gcs.fc_master_slave = NO; gcs.max_packet_size = 64500; gcs.max_throttle = 0.25; gcs.recv_q_hard_limit = 9223372036854775807; gcs.recv_q_soft_limit = 0.25; gcs.sync_donor = NO; gmcast.listen_addr = tcp://0.0.0.0:4567; gmcast.mcast_addr = ; gmcast.mcast_ttl = 1; gmcast.peer_timeout = PT3S; gmcast.time_wait = PT5S; gmcast.version = 0; ist.recv_addr = 192.168.70.4; pc.checksum = true; pc.ignore_quorum = false; pc.ignore_sb = false; pc.linger = PT2S; pc.npvo = false; pc.version = 0; protonet.backend = asio; protonet.version = 0; replicator.causal_read_timeout = PT30S; replicator.commit_order = 3
+	        Value: base_host = 192.168.70.4; base_port = 4567; evs.debug_log_mask = 0x1; \
+		evs.inactive_check_period = PT0.5S; evs.inactive_timeout = PT15S; evs.info_log_mask = 0; \
+		evs.install_timeout = PT15S; evs.join_retrans_period = PT0.3S; evs.keepalive_period = PT1S; \ 
+		evs.max_install_timeouts = 1; evs.send_window = 4; evs.stats_report_period = PT1M; \
+		evs.suspect_timeout = PT5S; evs.use_aggregate = true; evs.user_send_window = 2; evs.version = 0; \
+		evs.view_forget_timeout = PT5M; gcache.dir = /var/lib/mysql/; gcache.keep_pages_size = 0; \
+		gcache.mem_size = 0; gcache.name = /var/lib/mysql//galera.cache; gcache.page_size = 128M; \
+		gcache.size = 128M; gcs.fc_debug = 0; gcs.fc_factor = 0.5; gcs.fc_limit = 16; gcs.fc_master_slave = NO; \
+		gcs.max_packet_size = 64500; gcs.max_throttle = 0.25; gcs.recv_q_hard_limit = 9223372036854775807; \
+		gcs.recv_q_soft_limit = 0.25; gcs.sync_donor = NO; gmcast.listen_addr = tcp://0.0.0.0:4567; \ 
+		gmcast.mcast_addr = ; gmcast.mcast_ttl = 1; gmcast.peer_timeout = PT3S; gmcast.time_wait = PT5S; \ 
+		gmcast.version = 0; ist.recv_addr = 192.168.70.4; pc.checksum = true; pc.ignore_quorum = false; \ 
+		pc.ignore_sb = false; pc.linger = PT2S; pc.npvo = false; pc.version = 0; protonet.backend = asio; \ 
+		protonet.version = 0; replicator.causal_read_timeout = PT30S; replicator.commit_order = 3
 	1 row in set (0.00 sec)
 
 Specifically, look for ``ist.recv_addr``.
