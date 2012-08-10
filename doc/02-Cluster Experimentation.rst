@@ -242,8 +242,7 @@ This output will show us if there are any delays in the heartbeat compared with 
 
 Now, re-baseline node3 and restart an SST.  Watch the heartbeat monitor on node1 and myq_status on node2 carefully.  What do you observe?  Any idea why?
 
-Bonus points:
-	Modify /usr/bin/wsrep_sst_xtrabackup on node2 add ``--no-lock`` to ``INNOBACKUPEX_ARGS``::
+**Bonus points**: Modify /usr/bin/wsrep_sst_xtrabackup on node2 add ``--no-lock`` to ``INNOBACKUPEX_ARGS``::
 
 	INNOBACKUPEX_ARGS="--no-lock"
 
