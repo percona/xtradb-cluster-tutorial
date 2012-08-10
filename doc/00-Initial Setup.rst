@@ -1,7 +1,10 @@
 Percona XtraDB Cluster Initial Setup
 ========
 
-.. contents:: 	:backlinks: entry
+.. contents:: 
+   :backlinks: entry
+   :local:
+
 
 TL;DR
 -------
