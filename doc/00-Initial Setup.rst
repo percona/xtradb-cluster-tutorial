@@ -8,8 +8,8 @@ TL;DR
 
 It's a **very** good idea to do these steps *before* the tutorial session because conference WiFi tends to be unreliable at best.  At a minimum, at least do up through the step to download the centos6 box, which is several hundred MB.
 
-#. Download and install Virtualbox from [here](https://www.virtualbox.org/wiki/Downloads). Current version: 4.1.18): 
-#. Download and install Vagrant from [here](http://vagrantup.com).  Current version: 1.0.3
+#. Download and install Virtualbox from `here <https://www.virtualbox.org/wiki/Downloads>`_. (Current version: 4.1.18)
+#. Download and install Vagrant from `here <http://vagrantup.com>`_.  Current version: 1.0.3
 #. Keep your virtual box guest additions updated automatically: ``host> vagrant gem install vagrant-vbguest``
 #. Download centos6 vagrant box: (310MB) (optional, `vagrant up` will do this automatically): ``vagrant box add centos6 https://dl.dropbox.com/u/7225008/Vagrant/CentOS-6.3-x86_64-minimal.box``
 #. Get a copy of this git repository: ``host> git clone https://github.com/jayjanssen/pxc-tutorial``
