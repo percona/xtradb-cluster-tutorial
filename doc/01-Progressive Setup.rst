@@ -199,9 +199,11 @@ innodb_locks_unsafe_for_binlog, innodb_autoinc_lock_mode=2
 After you have added this configuration, tail the mysql error log and restart mysql:
 
 screen1::
+
 	tail -f /var/lib/mysql/error.log
 
 screen2::
+
 	service mysql restart
 
 You should see something similar in screen1 like following when the server restarts::
@@ -467,8 +469,11 @@ When we start mysql now::
 We can see here (with a bit of verbosity) that our node did an xtrabackup SST that took about a minute. 
 
 
-Checking two node cluster status
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Step 5: Checking cluster status
+---------------------------------
+
+Manually checking status
+~~~~~~~~~~~~~~~~~~~~~~~~
 
 Let's check the node status::
 
@@ -553,3 +558,31 @@ Check node1 and confirm the state is the same.  Also, we can confirm that the da
 Verify this matches node1.
 
 
+Checking status with myq_status
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+myq_status is a script from `myq_gadgets <https://github.com/jayjanssen/myq_gadgets>`_ which has a mode that reports the status of a wsrep cluster node.  Run it like this::
+
+	[root@node1 ~]# myq_status -t 1 wsrep
+	Wsrep    Cluster         Node                 Flow        Replicated      Received
+	    time stat conf size   rdy  cmt  ctd dist  paus sent   que  ops size   que  ops size
+	15:50:55 Prim    2    2    ON Sync   ON    0     0    0     0    0    0     0  6.0  375
+	15:50:56 Prim    2    2    ON Sync   ON    0     0    0     0    0    0     0    0    0
+	15:50:57 Prim    2    2    ON Sync   ON    0     0    0     0    0    0     0    0    0
+	15:50:58 Prim    2    2    ON Sync   ON    0     0    0     0    0    0     0    0    0
+	15:50:59 Prim    2    2    ON Sync   ON    0     0    0     0    0    0     0    0    0
+	^C
+
+This shows us a nice summarization of some ``wsrep%`` variables in near-realtime.  Note that:
+
+- Our cluster has 2 nodes
+- Our cluster is at config 2 (this increments every time a node joins or leaves the cluster)
+- This node (node1) belongs to the ``Prim`` (Primary) cluster; that is, the cluster with quorum.
+- This node is ready
+
+
+
+Step 6: Adding node3
+---------------------------------
+
+You should know enough now to add node3 to the cluster
