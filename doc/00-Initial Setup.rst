@@ -72,8 +72,8 @@ Notes
 - Running the command 'baseline.sh' on any node will do the following:
 
   - Stop mysqld
-  - Removes /etc/my.cnf
-  - Wipes out the existing /var/lib/mysql and creates a clean datadir.
+  - Remove /etc/my.cnf
+  - Wipe out the existing /var/lib/mysql and create a clean datadir.
 
 
 Terms and conventions
