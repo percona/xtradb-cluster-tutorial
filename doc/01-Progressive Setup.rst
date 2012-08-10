@@ -1,7 +1,9 @@
 Progressive PXC Setup
 =====================
 
-.. contents:: 	:backlinks: entry
+.. contents:: ""
+   :backlinks: entry
+   :local:
 
 Assumptions
 ------------
@@ -582,7 +584,7 @@ This shows us a nice summarization of some ``wsrep%`` variables in near-realtime
 
 
 
-Step 6: Adding node3
+Step 6: Add node3
 ---------------------------------
 
 You should know enough now to add node3 to the cluster
