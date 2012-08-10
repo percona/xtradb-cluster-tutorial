@@ -72,11 +72,15 @@ Notes
 
 - Virtualbox *might* crash your laptop every once in a while.  If you don't like it, ask Oracle for your money back.
 
-- Running the command 'baseline.sh' on any node will do the following:
+- Running the command ``baseline.sh`` on any node will do the following:
 
   - Stop mysqld
   - Remove /etc/my.cnf
   - Wipe out the existing /var/lib/mysql and create a clean datadir.
+
+- If a node gets into a weird state, try doing the ``baseline.sh`` trick on it and then::
+
+	host> vagrant provision <node>
 
 
 Terms and conventions
