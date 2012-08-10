@@ -8,9 +8,14 @@ log_error=error.log
 
 binlog_format=ROW
 
+bind-address=<%= ipaddress_eth1 %>
+innodb_log_file_size=64M
+
 wsrep_cluster_name=trimethylxanthine
+wsrep_cluster_address=
 wsrep_node_name=<%= hostname %>
 wsrep_node_address=<%= ipaddress_eth1 %>
+
 
 wsrep_provider=/usr/lib64/libgalera_smm.so
 
@@ -18,10 +23,8 @@ wsrep_sst_method=xtrabackup
 
 wsrep_slave_threads=2
 
-bind-address=<%= ipaddress_eth1 %>
 innodb_locks_unsafe_for_binlog=1
 innodb_autoinc_lock_mode=2
-innodb_log_file_size=64M
 
 [mysql]
 prompt="<%=hostname %> mysql> "
