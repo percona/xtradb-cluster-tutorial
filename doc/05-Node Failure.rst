@@ -98,15 +98,15 @@ Read Codership's `node failure documentation <http://www.codership.com/wiki/doku
 
 Here are the default variables as I see them as they would be configured in the my.cnf::
 
-	wsrep_provider_options = "evs.keepalive_period=PT1S;evs.inactive_check_period=PT0.5S;evs.suspect_timeout=PT5S;evs.inactive_timeout=PT15S;evs.consensus_timeout=PT30S"
+	SET GLOBAL wsrep_provider_options = "evs.keepalive_period=PT1S;evs.inactive_check_period=PT0.5S;evs.suspect_timeout=PT5S;evs.inactive_timeout=PT15S;evs.consensus_timeout=PT30S"
 
 We can see that the default settings don't appear to follow the rules from the documentation.  However, let's see what we can do to retune the cluster.  Based the above documentation and the `galera provider options <http://www.codership.com/wiki/doku.php?id=galera_parameters_0.8>`_, make a guess about what should be tuned and see how it affects write latencies.  Some notes:
 
-- Setting bad values here can either cause mysqld to crash, or (occasionally) spew helpful error messages into the mysql error log
+- Setting bad values here can either cause mysqld to crash on restart, or (occasionally) spew helpful error messages into the mysql error log
+- You can use SET GLOBAL or put the settings in the my.cnf on each node and restart.
 - Try setting only a subset of variables. 
 - Try making only very incremental changes.
-- You have to change the setting on all the nodes separately, there is no way to apply a setting to all nodes in the cluster dynamically.
-- Restart the nodes one at a time, be sure all the nodes are in a good state (i.e., belong to the cluster) before restarting the next node.
+- You have to change the setting on all the nodes separately, there is no way to apply a setting to all nodes in the cluster at once.
 - Block all network traffic to node3 as in the previous step to simulate the outage.
 - Messing with these variables can really screw up your cluster requiring you to re-SST all your nodes.  Have fun!
 
@@ -114,3 +114,6 @@ Questions:
 
 - What timeout ended up being most effective?
 - What are the tradeoffs of how you retuned the settings compared with the defaults? 
+
+
+SET GLOBAL wsrep_provider_options = "evs.keepalive_period=PT0.3S;evs.suspect_timeout=PT1S"
