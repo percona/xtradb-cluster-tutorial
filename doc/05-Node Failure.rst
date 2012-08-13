@@ -62,7 +62,7 @@ As an experiment, let's see what happens if node3 only looses connectivity to no
 - Does node3 stay in the cluster?
 - What effect does this have on writes?
 
-**Make sure to ``service iptables stop`` before going to the next step!!**
+**Make sure to restore communications to and from all nodes before going to the next step!!**
 
 
 Total network failure
