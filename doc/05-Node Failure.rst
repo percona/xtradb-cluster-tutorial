@@ -62,8 +62,6 @@ As an experiment, let's see what happens if node3 only looses connectivity to no
 - Does node3 stay in the cluster?
 - What effect does this have on writes?
 
-date; iptables -A INPUT -s 192.168.70.2 -j DROP; iptables -A INPUT -s 192.168.70.3 -j DROP; iptables -A OUTPUT -s 192.168.70.2 -j DROP; iptables -A OUTPUT -s 192.168.70.3 -j DROP
-
 **Make sure to ``service iptables stop`` before going to the next step!!**
 
 
@@ -72,7 +70,9 @@ Total network failure
 
 A graceful node mysqld shutdown should behave differently from a node that simply stops responding on the network by dropping all packets on node3 to and from the other nodes::
 
-	[root@node3 ~]# date; iptables -A INPUT -s 192.168.70.2 -j DROP; iptables -A INPUT -s 192.168.70.3 -j DROP; iptables -A OUTPUT -s 192.168.70.2 -j DROP; iptables -A OUTPUT -s 192.168.70.3 -j DROP
+	[root@node3 ~]# date; iptables -A INPUT -s 192.168.70.2 -j DROP; \
+	iptables -A INPUT -s 192.168.70.3 -j DROP; iptables -A OUTPUT -s 192.168.70.2 -j DROP; \
+	iptables -A OUTPUT -s 192.168.70.3 -j DROP
 
 What is the observed effect?  
 
@@ -86,7 +86,7 @@ When you are ready to allow node3 to communicate with the other nodes, simply st
 - What happens when the node can talk to the cluster again?
 - Does this action have any noticeable effect on write latency?
 
-**Make sure to ``service iptables stop`` before going to the next step!!**
+**Make sure to restore communications to and from all nodes before going to the next step!!**
 
 
 Tuning to optimize node failure detection
@@ -100,7 +100,7 @@ Here are the default variables as I see them as they would be configured in the 
 
 	wsrep_provider_options = "evs.keepalive_period=PT1S;evs.inactive_check_period=PT0.5S;evs.suspect_timeout=PT5S;evs.inactive_timeout=PT15S;evs.consensus_timeout=PT30S"
 
-We can see that the default settings don't appear to follow the rules from the documentation.  However, let's see what we can do to retune the cluster.  Based the above documentation and the `galera provider options <http://www.codership.com/wiki/doku.php?id=galera_parameters_0.8>`_, make a guess about what should be tuned and see how it affects write latencies.  Some notes::
+We can see that the default settings don't appear to follow the rules from the documentation.  However, let's see what we can do to retune the cluster.  Based the above documentation and the `galera provider options <http://www.codership.com/wiki/doku.php?id=galera_parameters_0.8>`_, make a guess about what should be tuned and see how it affects write latencies.  Some notes:
 
 - Setting bad values here can either cause mysqld to crash, or (occasionally) spew helpful error messages into the mysql error log
 - Try setting only a subset of variables. 
@@ -109,7 +109,6 @@ We can see that the default settings don't appear to follow the rules from the d
 - Restart the nodes one at a time, be sure all the nodes are in a good state (i.e., belong to the cluster) before restarting the next node.
 - Block all network traffic to node3 as in the previous step to simulate the outage.
 - Messing with these variables can really screw up your cluster requiring you to re-SST all your nodes.  Have fun!
-
 
 Questions:
 
