@@ -82,6 +82,11 @@ Notes
 
 	host> vagrant provision <node>
 
+- You can remove the cluster state on a node without affecting the data on that node by removing::
+	/var/lib/mysql/grastate.dat
+
+- Sometimes init.d loses track of a mysqld instance.  If you can't shutdown mysqld with ``service mysql stop``, try ``mysqladmin shutdown``.  If that doesn't work, try ``killall mysqld_safe; killall mysqld``
+
 
 Terms and conventions
 ---------------------
