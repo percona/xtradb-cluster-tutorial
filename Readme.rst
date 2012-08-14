@@ -10,15 +10,15 @@ This repository contains both Tutorial documentation organized into modules and 
 Tutorial Students
 ------------------
 
-If you are attending a conference tutorial, start with the `Initial Setup <doc/Initial%20Setup.rst>`_.  It is *highly* recommended you do these steps *before* the conference and are subjected to dodgy conference WiFi as the steps require downloading a lot of software.
+If you are attending a conference tutorial, start with ``doc/Initial Setup.rst``.  It is *highly* recommended you do these steps *before* the conference and are subjected to dodgy conference WiFi as the steps require downloading a lot of software.
 
 
 Individual Learners
 ---------------------
 
-If you are not attending a conference tutorial, you may wish to start follow the Tutorial steps rigidly above, or just get the working environment setup and start poking around.  In either case, the `Initial Setup </doc/Initial%20Setup.rst>`_ document for details on setting up the environment on the machine of your choosing.  
+If you are not attending a conference tutorial, you may wish to start follow the Tutorial steps rigidly above, or just get the working environment setup and start poking around.  In either case, the ``doc/Initial Setup.rst`` document for details on setting up the environment on the machine of your choosing.  
 
-From there, the `documented modules <doc/>`_ are mostly self-contained, though some depened on previous steps.
+From there, all the documented modules under ``doc/`` are mostly self-contained, though some depened on previous steps modules to a degree.
 
 
 Contributors
