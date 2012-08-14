@@ -55,8 +55,8 @@ Now select all the data in the table::
 What strikes you as odd about the rows?
 
 
-Deadlocks on COMMIT
--------------------
+Deadlocks when you didn't expect them
+-------------------------------------
 
 One of the things to be aware of with using PXC is that there can be rollbacks issued by the server on COMMIT, which cannot happen in standard single-node Innodb.
 
@@ -157,9 +157,14 @@ This commit succeeded!  On standard Innodb, this should have blocked waiting for
 	+---+-------+
 	3 rows in set (0.00 sec)
 
-We get a deadlock on node1, in spite of it being the first transaction to open a record lock.  What has happened here?
+We get a deadlock on node1, in spite of it being the first transaction to open a record lock.  
 
-To compare this behavior with standalone Innodb, redo these steps but with two separate sessions on the same node and see what happens.  
+- What has happened here?
+- Retry these steps, but instead of a ``commit`` on node1, try another ``select * from autoinc``.  What is the result?
+- Retry these steps, but instead of two separate nodes, execute them in different sessions on the same node.  What is the result?
+- Imagine this is your production environment and you are seeing these deadlocks.  How would you troubleshoot this?
+  - Does the deadlock show up in ``SHOW ENGINE INNODB STATUS``?
+
 
 
 Restarting cluster nodes
