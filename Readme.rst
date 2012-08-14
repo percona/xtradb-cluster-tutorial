@@ -18,7 +18,7 @@ Individual Learners
 
 If you are not attending a conference tutorial, you may wish to start follow the Tutorial steps rigidly above, or just get the working environment setup and start poking around.  In either case, the ``doc/Initial Setup.rst`` document for details on setting up the environment on the machine of your choosing.  
 
-From there, all the documented modules under ``doc/`` are mostly self-contained, though some depened on previous steps modules to a degree.
+From there, all the documented modules under ``doc/`` are mostly self-contained, though some depend on previous steps modules to a degree.
 
 
 Contributors
