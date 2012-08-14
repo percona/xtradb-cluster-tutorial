@@ -163,7 +163,7 @@ We get a deadlock on node1, in spite of it being the first transaction to open a
 - Retry these steps, but instead of a ``commit`` on node1, try another ``select * from autoinc``.  What is the result?
 - Retry these steps, but instead of two separate nodes, execute them in different sessions on the same node.  What is the result?
 - Imagine this is your production environment and you are seeing these deadlocks.  How would you troubleshoot this?
-  - Does the deadlock show up in ``SHOW ENGINE INNODB STATUS``?
+- Does the deadlock show up in ``SHOW ENGINE INNODB STATUS``?
 
 
 
