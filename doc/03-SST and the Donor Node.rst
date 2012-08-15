@@ -46,15 +46,11 @@ Reads and writes on the Donor with xtrabackup SST
 node2 is our dedicated Donor node, so let's start some regular writes there so we can see how it behaves during Donation.  On node2, setup and start `pt-heartbeat <http://www.percona.com/doc/percona-toolkit/pt-heartbeat.html>`_ so a row gets updated every second from there.  Due to a limitation of pt-heartbeat, we must create a legacy version of the heartbeat table that will work with PXC::
 
 	node2 mysql> create schema percona;
-	Query OK, 1 row affected (0.00 sec)
-
-	node2 mysql> use percona;
-	Database changed
-	node2 mysql> CREATE TABLE heartbeat (
-	    ->   id int NOT NULL PRIMARY KEY,
-	    ->   ts datetime NOT NULL
-	    -> );
-	Query OK, 0 rows affected (0.01 sec)
+	use percona;
+	CREATE TABLE heartbeat (
+		id int NOT NULL PRIMARY KEY,
+		ts datetime NOT NULL
+	);
 	
 Now, start pt-heartbeat on node2::
 
