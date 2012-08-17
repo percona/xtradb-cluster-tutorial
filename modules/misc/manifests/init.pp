@@ -30,12 +30,12 @@ class misc {
 			ensure => 'directory',
 	}
 
-	exec {
-			"mkdir /root/bin 2> /dev/null; wget -O myq_gadgets-latest.tgz https://github.com/jayjanssen/myq_gadgets/tarball/master && tar xvzf myq_gadgets-latest.tgz -C /root/bin --strip-components=1":
-				cwd => "/tmp",
-				creates => "/root/bin/myq_status",
-				path => ['/bin','/usr/bin','/usr/local/bin'];
-	}
+	#exec {
+	#		"mkdir /root/bin 2> /dev/null; wget -O myq_gadgets-latest.tgz https://github.com/jayjanssen/myq_gadgets/tarball/master && tar xvzf myq_gadgets-latest.tgz -C /root/bin --strip-components=1":
+	#			cwd => "/tmp",
+	#			creates => "/root/bin/myq_status",
+	#			path => ['/bin','/usr/bin','/usr/local/bin'];
+	#}
 
 	file {
 		"/usr/local/bin/baseline.sh":
