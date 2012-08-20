@@ -123,12 +123,10 @@ I use pt-heartbeat in my PXC testing to show when there are replication hiccups 
 	node2 mysql> create schema percona;
 	Query OK, 1 row affected (0.00 sec)
 
-	node2 mysql> use percona;
-	Database changed
-	node2 mysql> CREATE TABLE heartbeat (
-	    ->   id int NOT NULL PRIMARY KEY,
-	    ->   ts datetime NOT NULL
-	    -> );
+	node2 mysql> CREATE TABLE percona.heartbeat (
+	    id int NOT NULL PRIMARY KEY,
+	    ts datetime NOT NULL
+	    );
 	Query OK, 0 rows affected (0.01 sec)
 	
 Now, start pt-heartbeat on node2::
