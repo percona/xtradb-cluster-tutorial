@@ -70,6 +70,8 @@ To log into a node
 Notes
 ------
 
+- Each node is running a primary IP on the 192.168.70.0/24 subnet.  For the purposes of these exercises, this is the network for all client connections as well as cluster replication and any other tasks.
+
 - Virtualbox *might* crash your laptop every once in a while.  If you don't like it, ask Oracle for your money back.
 
 - Running the command ``baseline.sh`` on any node will do the following:
