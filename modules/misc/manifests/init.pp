@@ -43,6 +43,11 @@ class misc {
 			group => 'root',
 			mode => 0554,
 			source => "/vagrant/modules/misc/files/baseline.sh";
+		"/usr/local/bin/baseline_haproxy.sh":
+			owner => 'root',
+			group => 'root',
+			mode => 0554,
+			source => "/vagrant/modules/misc/files/baseline_haproxy.sh";
 		"/usr/local/bin/quick_update.pl":
 			owner => 'root',
 			group => 'root',
