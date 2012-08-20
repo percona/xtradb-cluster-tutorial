@@ -31,9 +31,9 @@ First of all, we need to setup a health check for HAProxy to use on each node.  
 	
 This says our node is down, but is it?  Clustercheck is a shell script, look at ``/usr/bin/clustercheck`` in a text editor to see what it does.
 
-	- How does it connect to MySQL?
-	- What does it actually check? (`Hint <http://www.codership.com/wiki/doku.php?id=galera_node_fsm>`_)
-	- What do you need to do to make it work?  For the purposes of this tutorial, try to do it without modifying the clustercheck script.
+- How does it connect to MySQL?
+- What does it actually check? (`Hint <http://www.codership.com/wiki/doku.php?id=galera_node_fsm>`_)
+- What do you need to do to make it work?  For the purposes of this tutorial, try to do it without modifying the clustercheck script.
 
 After you fix it, it should start working::
 
@@ -208,7 +208,7 @@ We seem to have a working HAproxy configuration, but it would be nice to see the
 	  balance roundrobin
 		stats uri /
 
-Then restart haproxy and visit ``http://192.168.70.2:9999/`` in your browser.
+Then restart haproxy and visit `http://192.168.70.2:9999/ <http://192.168.70.2:9999/>`_ in your browser.
 
 - What do you see?
 - Make a connection through the HAProxy port, does it show up in the interface?
