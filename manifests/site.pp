@@ -5,7 +5,6 @@ node node1 {
 	include xinet
 	include misc
 	include haproxy
-	include myq_gadgets
 
 	Class['percona::repository'] -> Class['percona::cluster']
 	Class['percona::repository'] -> Class['percona::toolkit']
