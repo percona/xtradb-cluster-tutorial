@@ -9,7 +9,6 @@ Vagrant::Config.run do |config|
 		node1_config.vm.box_url = "https://dl.dropbox.com/u/7225008/Vagrant/CentOS-6.3-x86_64-minimal.box"
 		node1_config.vm.host_name = "node1"
 		node1_config.vm.customize ["modifyvm", :id, "--memory", "256"]
-		node1_config.vm.customize ["modifyvm", :id, "--vram", "20"]
 		node1_config.vm.network :hostonly, "192.168.70.2"
 		node1_config.vm.provision :puppet do |node1_puppet|
 			node1_puppet.pp_path = "/tmp/vagrant-puppet"
@@ -24,7 +23,6 @@ Vagrant::Config.run do |config|
 		node2_config.vm.box_url = "https://dl.dropbox.com/u/7225008/Vagrant/CentOS-6.3-x86_64-minimal.box"
 		node2_config.vm.host_name = "node2"
 		node2_config.vm.customize ["modifyvm", :id, "--memory", "256"]
-		node2_config.vm.customize ["modifyvm", :id, "--vram", "20"]
 		node2_config.vm.network :hostonly, "192.168.70.3"
 		node2_config.vm.provision :puppet do |node2_puppet|
 			node2_puppet.pp_path = "/tmp/vagrant-puppet"
@@ -39,7 +37,6 @@ Vagrant::Config.run do |config|
 		node3_config.vm.box_url = "https://dl.dropbox.com/u/7225008/Vagrant/CentOS-6.3-x86_64-minimal.box"
 		node3_config.vm.host_name = "node3"
 		node3_config.vm.customize ["modifyvm", :id, "--memory", "256"]
-		node3_config.vm.customize ["modifyvm", :id, "--vram", "20"]
 		node3_config.vm.network :hostonly, "192.168.70.4"
 		node3_config.vm.provision :puppet do |node3_puppet|
 			node3_puppet.pp_path = "/tmp/vagrant-puppet"
