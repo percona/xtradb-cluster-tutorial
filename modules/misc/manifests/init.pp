@@ -20,6 +20,8 @@ class misc {
 		'man': ensure => 'present';
 		'unzip': ensure => 'present';
 		'lsof': ensure => 'present';
+		'sysbench': provider => 'rpm', ensure => 'present', source   => "/vagrant/modules/misc/files/sysbench-0.5-2.el6_.x86_64.rpm",
+		 ;
 	}
 	
 	file {
@@ -27,7 +29,11 @@ class misc {
 			owner => 'root',
 			group => 'root',
 			mode => 0775,
-			ensure => 'directory',
+			ensure => 'directory';
+		"/root/sysbench_tests":
+			ensure => link,
+			target => '/usr/share/doc/sysbench/tests',
+			require => Package['sysbench'];
 	}
 
 	exec {
