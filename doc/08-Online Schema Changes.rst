@@ -8,7 +8,7 @@ Online Schema Changes
 Test setup
 ---------------
 
-Follow the ``Using sysbench to generate load`` section of the ``Initial Setup`` to prepare a test table and start a sysbench test run.  Keep the terminal running the test visible on your screen.  
+Follow the ``Using sysbench to generate load`` section of the ``Initial Setup`` document to prepare a test table and start a sysbench test run.  Keep the terminal running the test visible on your screen.  
 
 
 Basic Alter Table
