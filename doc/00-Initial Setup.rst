@@ -10,10 +10,10 @@ How to work through this Tutorial
 
 The basic steps are as follows:
 
-1. Setup your environment (see below)
-1. Familiarize yourself with how to use vagrant (i.e., ssh to nodes, etc.)
-1. Pick a module and work through it.  Typically it's best to start with the ``01-Progressive Setup`` module, but generally you can work through any module in any order
-1. After you finish each module, be sure to shutdown any test processes you may have running, and you may want to run ``vagrant provision`` again to restore the cluster back to original working order.
+#. Setup your environment (see below)
+#. Familiarize yourself with how to use vagrant (i.e., ssh to nodes, etc.)
+#. Pick a module and work through it.  Typically it's best to start with the ``01-Progressive Setup`` module, but generally you can work through any module in any order
+#. After you finish each module, be sure to shutdown any test processes you may have running, and you may want to run ``vagrant provision`` again to restore the cluster back to original working order.
 
 Setting up your Environment
 --------------------------
