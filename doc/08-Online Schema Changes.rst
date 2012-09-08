@@ -12,35 +12,27 @@ To simulate a live environment, we will kick off setup and kickoff a sysbench ol
 
 First, let's prepare a test table::
 
-	[root@node1 ~]# sysbench --test=sysbench_tests/db/common.lua --mysql-user=root --mysql-db=test --oltp-table-size=100000 prepare
+	[root@node1 ~]# sysbench --test=sysbench_tests/db/common.lua --mysql-user=root --mysql-db=test --oltp-table-size=250000 prepare
 
 Now, we can start a test run::
 
-	[root@node1 ~]# sysbench --test=sysbench_tests/db/oltp.lua --mysql-user=root --mysql-db=test --oltp-table-size=100000 --report-interval=1 --max-requests=0 run
-	WARNING: Both max-requests and max-time are 0, running endless test
-	sysbench 0.5:  multi-threaded system evaluation benchmark
-	
-	Running the test with following options:
-	Number of threads: 1
-	Report intermediate results every 1 second(s)
-	Random number generator seed is 0 and will be ignored
-	
-	
-	Threads started!
-	
-	[   1s] threads: 1, tps: 83.06, reads/s: 1173.80, writes/s: 332.23, response time: 20.27ms (95%)
-	[   2s] threads: 1, tps: 77.98, reads/s: 1094.73, writes/s: 315.92, response time: 20.71ms (95%)
-	[   3s] threads: 1, tps: 82.01, reads/s: 1148.20, writes/s: 328.06, response time: 20.23ms (95%)
-	[   4s] threads: 1, tps: 78.99, reads/s: 1105.88, writes/s: 315.97, response time: 18.94ms (95%)
-	[   5s] threads: 1, tps: 76.01, reads/s: 1054.19, writes/s: 300.05, response time: 20.48ms (95%)
-	[   6s] threads: 1, tps: 87.00, reads/s: 1213.93, writes/s: 347.98, response time: 18.18ms (95%)
-	...
+	[root@node1 ~]# sysbench --test=sysbench_tests/db/oltp.lua --mysql-user=root --mysql-db=test --oltp-table-size=250000 --report-interval=1 --max-requests=0 --tx-rate=10 run | grep tps
+	[   1s] threads: 1, tps: 11.00, reads/s: 154.06, writes/s: 44.02, response time: 41.91ms (95%)
+	[   2s] threads: 1, tps: 18.00, reads/s: 252.03, writes/s: 72.01, response time: 24.02ms (95%)
+	[   3s] threads: 1, tps: 9.00, reads/s: 126.01, writes/s: 36.00, response time: 20.74ms (95%)
+	[   4s] threads: 1, tps: 13.00, reads/s: 181.97, writes/s: 51.99, response time: 19.19ms (95%)
+	[   5s] threads: 1, tps: 13.00, reads/s: 182.00, writes/s: 52.00, response time: 22.75ms (95%)
+	[   6s] threads: 1, tps: 10.00, reads/s: 140.00, writes/s: 40.00, response time: 22.35ms (95%)
+	[   7s] threads: 1, tps: 13.00, reads/s: 181.99, writes/s: 52.00, response time: 21.09ms (95%)
+	[   8s] threads: 1, tps: 13.00, reads/s: 181.99, writes/s: 52.00, response time: 23.71ms (95%)
 
-Your performance may vary.  As the WARNING message indicates, this test will go forever until you ``Ctrl-C`` it.  You can kill and restart this test at any time
+Your performance may vary.  Note we are setting ``--tx-rate`` as a way to prevent your VMs from working too hard.  Feel free to adjust ``-tx-rate`` accordingly, but be sure that you have several operations a second for the following tests.  
+
+As the WARNING message indicates, this test will go forever until you ``Ctrl-C`` it.  You can kill and restart this test at any time
 
 Note that if you mess something up, you can cleanup the test table and start these steps over if needed::
 
-	[root@node1 ~]# sysbench --test=sysbench_tests/db/common.lua --mysql-user=root --mysql-db=test --oltp-table-size=100000 cleanup
+	[root@node1 ~]# sysbench --test=sysbench_tests/db/common.lua --mysql-user=root --mysql-db=test cleanup
 	sysbench 0.5:  multi-threaded system evaluation benchmark
 
 	Dropping table 'sbtest1'...
@@ -87,7 +79,7 @@ Note that this *will* stop sysbench for a time (Do you know why?).  Now let's ru
 Rolling Schema Upgrades
 -----------------------
 
-Galera provides a `Rolling Schema Upgrade <http://www.codership.com/wiki/doku.php?id=rolling_schema_upgrade>` setting to allow you to avoid globally locking the cluster on a schema change.  Let's try it out, set this global variable on all three nodes::
+Galera provides a `Rolling Schema Upgrade <http://www.codership.com/wiki/doku.php?id=rolling_schema_upgrade>`_ setting to allow you to avoid globally locking the cluster on a schema change.  Let's try it out, set this global variable on all three nodes::
 
 	node1 mysql> set global wsrep_OSU_method='RSU';
 	node2 mysql> set global wsrep_OSU_method='RSU';
@@ -121,7 +113,7 @@ Finally, let's drop a column on ``test.sbtest1`` that sysbench is using (you may
 pt-online-schema-change
 -----------------------
 
-This is not a tutorial on `pt-online-schema-change <http://www.percona.com/doc/percona-toolkit/2.1/pt-online-schema-change.html>`, but let's illustrate that it works with PXC.
+This is not a tutorial on `pt-online-schema-change <http://www.percona.com/doc/percona-toolkit/2.1/pt-online-schema-change.html>`_, but let's illustrate that it works with PXC.
 
 First, set the ``wsrep_OSU_method`` back to TOI (the default) on all nodes::
 
@@ -131,9 +123,6 @@ First, set the ``wsrep_OSU_method`` back to TOI (the default) on all nodes::
 
 Now, let's do our schema change fully non-blocking::
 
-	[root@node2 ~]# pt-online-schema-change --alter "add column z varchar(32)" D=test,t=sbtest1 --chunk-size=100 --execute
-
-Note that I only set --chunk-size because your VMs are likely running at full-capacity, so giving pt-online-schema-change full rein will affect your application performance negatively.  
+	[root@node2 ~]# pt-online-schema-change --alter "add column z varchar(32)" D=test,t=sbtest1 --execute
 
 - How does the application respond to this change?
-- If you remove the --chunk-size option, how does it respond?  Why?
