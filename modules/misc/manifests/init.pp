@@ -20,7 +20,7 @@ class misc {
 		'man': ensure => 'present';
 		'unzip': ensure => 'present';
 		'lsof': ensure => 'present';
-		'sysbench': provider => 'rpm', ensure => 'present', source   => "/vagrant/modules/misc/files/sysbench-0.5-2.el6_.x86_64.rpm",
+		'sysbench': provider => 'rpm', ensure => 'present', source   => "/vagrant/modules/misc/files/sysbench-0.5-3.el6_.x86_64.rpm",
 		 ;
 	}
 	
