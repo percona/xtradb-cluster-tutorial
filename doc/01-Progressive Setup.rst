@@ -5,11 +5,6 @@ Progressive PXC Setup
    :backlinks: entry
    :local:
 
-Assumptions
-------------
-
-- ``vagrant up`` complete and successful
-
 
 Step 0: baseline the nodes
 --------------------------
