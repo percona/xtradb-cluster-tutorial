@@ -5,9 +5,21 @@ Percona XtraDB Cluster Initial Setup
    :backlinks: entry
    :local:
 
+How to work through this Tutorial
+----------------------------------
+
+The basic steps are as follows:
+
+1. Setup your environment (see below)
+1. Familiarize yourself with how to use vagrant (i.e., ssh to nodes, etc.)
+1. Pick a module and work through it.  Typically it's best to start with the ``01-Progressive Setup`` module, but generally you can work through any module in any order
+
+
+Setting up your Environment
+--------------------------
 
 TL;DR
--------
+~~~~~~~
 
 It's a **very** good idea to do these steps *before* the tutorial session because conference WiFi tends to be unreliable at best.  At a minimum, at least do up through the step to download the centos6 box, which is several hundred MB.
 
@@ -24,7 +36,7 @@ It's a **very** good idea to do these steps *before* the tutorial session becaus
 That should do it!
 
 What does this actually do?
----------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The basic flow of what's happening above is:
 
