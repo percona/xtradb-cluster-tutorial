@@ -8,7 +8,7 @@ State Snapshot Transfer (SST) and the Donor node
 What is SST?
 ------------
 
-A State Snapshot Transfer (SST) is a full copy of cluster data to node.  The node that needs the data is called the JOINER, and the node that sends the data is called the DONOR, there can only be one DONOR.
+A State Snapshot Transfer (SST) is a full copy of cluster data to a specific node.  A nodes have a full copy of all the cluster data in PXC, so SST is a way for nodes to get in sync with the other nodes in the cluster.  The node that needs the data is called the JOINER, and the node that sends the data is called the DONOR.  There can only be one DONOR node for a given JOINER, and a DONOR is only able to donate to a single JOINER at a time.  
 
 This is effectively a full backup of the DONOR node, so the methods available for SST should look familar (e.g., xtrabackup, rsync, mysqldump) if you've ever backed up a MySQL server.
 
