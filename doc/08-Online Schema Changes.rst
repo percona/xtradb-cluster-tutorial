@@ -5,37 +5,10 @@ Online Schema Changes
    :backlinks: entry
    :local:
 
-Setting up Live Environment
---------------------------
+Test setup
+---------------
 
-To simulate a live environment, we will kick off setup and kickoff a sysbench oltp test with a single test thread.
-
-First, let's prepare a test table::
-
-	[root@node1 ~]# sysbench --test=sysbench_tests/db/common.lua --mysql-user=root --mysql-db=test --oltp-table-size=250000 prepare
-
-Now, we can start a test run::
-
-	[root@node1 ~]# sysbench --test=sysbench_tests/db/oltp.lua --mysql-user=root --mysql-db=test --oltp-table-size=250000 --report-interval=1 --max-requests=0 --tx-rate=10 run | grep tps
-	[   1s] threads: 1, tps: 11.00, reads/s: 154.06, writes/s: 44.02, response time: 41.91ms (95%)
-	[   2s] threads: 1, tps: 18.00, reads/s: 252.03, writes/s: 72.01, response time: 24.02ms (95%)
-	[   3s] threads: 1, tps: 9.00, reads/s: 126.01, writes/s: 36.00, response time: 20.74ms (95%)
-	[   4s] threads: 1, tps: 13.00, reads/s: 181.97, writes/s: 51.99, response time: 19.19ms (95%)
-	[   5s] threads: 1, tps: 13.00, reads/s: 182.00, writes/s: 52.00, response time: 22.75ms (95%)
-	[   6s] threads: 1, tps: 10.00, reads/s: 140.00, writes/s: 40.00, response time: 22.35ms (95%)
-	[   7s] threads: 1, tps: 13.00, reads/s: 181.99, writes/s: 52.00, response time: 21.09ms (95%)
-	[   8s] threads: 1, tps: 13.00, reads/s: 181.99, writes/s: 52.00, response time: 23.71ms (95%)
-
-Your performance may vary.  Note we are setting ``--tx-rate`` as a way to prevent your VMs from working too hard.  Feel free to adjust ``-tx-rate`` accordingly, but be sure that you have several operations a second for the following tests.  
-
-As the WARNING message indicates, this test will go forever until you ``Ctrl-C`` it.  You can kill and restart this test at any time
-
-Note that if you mess something up, you can cleanup the test table and start these steps over if needed::
-
-	[root@node1 ~]# sysbench --test=sysbench_tests/db/common.lua --mysql-user=root --mysql-db=test cleanup
-	sysbench 0.5:  multi-threaded system evaluation benchmark
-
-	Dropping table 'sbtest1'...
+Follow the ``Using sysbench to generate load`` section of the ``Initial Setup`` document to prepare a test table and start a sysbench test run.  Keep the terminal running the test visible on your screen.  
 
 
 Basic Alter Table

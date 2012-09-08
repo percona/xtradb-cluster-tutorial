@@ -5,20 +5,15 @@ Progressive PXC Setup
    :backlinks: entry
    :local:
 
-Assumptions
-------------
-
-- ``vagrant up`` complete and successful
-
 
 Step 0: baseline the nodes
 --------------------------
 
 We are assuming here that you have successfully run `vagrant up` and created the 3 node PXC cluster using puppet.  Since this tutorial is intended to teach you how to migrate from an existing MySQL instance into a PXC cluster, we are now going to undo some of that work to give you a good baseline to start with.  To baseline your nodes, simply run::
 
-	host> ./baseline.pl
+	host> baseline.sh
 
-This will stop mysql on all your nodes, remove the my.cnf and wipe the datadirs.
+This will stop mysql on all your nodes, remove the my.cnf and wipe the datadirs. *Do this on all 3 nodes!*
 
 
 Step 1: Setup node1 as standalone MySQL
@@ -210,46 +205,47 @@ screen2::
 
 You should see something similar in screen1 like following when the server restarts::
 
-	120809 21:06:37 mysqld_safe mysqld from pid file /var/lib/mysql/node1.pid ended
-	120809 21:06:52 mysqld_safe Starting mysqld daemon with databases from /var/lib/mysql
-	120809 21:06:52 [Note] Flashcache bypass: disabled
-	120809 21:06:52 [Note] Flashcache setup error is : ioctl failed
-	
-	120809 21:06:52 [Note] WSREP: Read nil XID from storage engines, skipping position init
-	120809 21:06:52 [Note] WSREP: wsrep_load(): loading provider library '/usr/lib64/libgalera_smm.so'
-	120809 21:06:52 [Note] WSREP: wsrep_load(): Galera 2.1(r113) by Codership Oy <info@codership.com> loaded succesfully.
-	120809 21:06:52 [Warning] WSREP: Could not open saved state file for reading: /var/lib/mysql//grastate.dat
-	120809 21:06:52 [Note] WSREP: Found saved state: 00000000-0000-0000-0000-000000000000:-1
-	120809 21:06:52 [Note] WSREP: Preallocating 134219048/134219048 bytes in '/var/lib/mysql//galera.cache'...
-	120809 21:06:52 [Note] WSREP: Passing config to GCS: base_host = 192.168.70.2; gcache.dir = /var/lib/mysql/; gcache.keep_pages_size = 0; gcache.mem_size = 0; gcache.name = /var/lib/mysql//galera.cache; gcache.page_size = 128M; gcache.size = 128M; gcs.fc_debug = 0; gcs.fc_factor = 0.5; gcs.fc_limit = 16; gcs.fc_master_slave = NO; gcs.max_packet_size = 64500; gcs.max_throttle = 0.25; gcs.recv_q_hard_limit = 9223372036854775807; gcs.recv_q_soft_limit = 0.25; gcs.sync_donor = NO; replicator.causal_read_timeout = PT30S; replicator.commit_order = 3
-	120809 21:06:52 [Note] WSREP: Assign initial position for certification: -1, protocol version: -1
-	120809 21:06:52 [Note] WSREP: wsrep_sst_grab()
-	120809 21:06:52 [Note] WSREP: Start replication
-	120809 21:06:52 [Note] WSREP: Setting initial position to 00000000-0000-0000-0000-000000000000:-1
-	120809 21:06:52 [Note] WSREP: protonet asio version 0
-	120809 21:06:52 [Note] WSREP: backend: asio
-	120809 21:06:52 [Note] WSREP: GMCast version 0
-	120809 21:06:52 [Note] WSREP: (613617f2-e255-11e1-0800-84cc659255da, 'tcp://0.0.0.0:4567') listening at tcp://0.0.0.0:4567
-	120809 21:06:52 [Note] WSREP: (613617f2-e255-11e1-0800-84cc659255da, 'tcp://0.0.0.0:4567') multicast: , ttl: 1
-	120809 21:06:52 [Note] WSREP: EVS version 0
-	120809 21:06:52 [Note] WSREP: PC version 0
-	120809 21:06:52 [Note] WSREP: gcomm: connecting to group 'trimethylxanthine', peer ''
-	120809 21:06:52 [Note] WSREP: view(view_id(PRIM,613617f2-e255-11e1-0800-84cc659255da,1) memb {
-	        613617f2-e255-11e1-0800-84cc659255da,
+	120908 16:27:08 mysqld_safe mysqld from pid file /var/lib/mysql/node1.pid ended
+	120908 16:28:07 mysqld_safe Starting mysqld daemon with databases from /var/lib/mysql
+	120908 16:28:07 [Note] Flashcache bypass: disabled
+	120908 16:28:07 [Note] Flashcache setup error is : ioctl failed
+
+	120908 16:28:07 [Note] WSREP: Read nil XID from storage engines, skipping position init
+	120908 16:28:07 [Note] WSREP: wsrep_load(): loading provider library '/usr/lib64/libgalera_smm.so'
+	120908 16:28:07 [Note] WSREP: wsrep_load(): Galera 2.2(r114) by Codership Oy <info@codership.com> loaded succesfully.
+	120908 16:28:07 [Warning] WSREP: Could not open saved state file for reading: /var/lib/mysql//grastate.dat
+	120908 16:28:07 [Note] WSREP: Found saved state: 00000000-0000-0000-0000-000000000000:-1
+	120908 16:28:07 [Note] WSREP: Preallocating 134219048/134219048 bytes in '/var/lib/mysql//galera.cache'...
+	120908 16:28:07 [Note] WSREP: Passing config to GCS: base_host = 192.168.70.2; gcache.dir = /var/lib/mysql/; gcache.keep_pages_size = 0; gcache.mem_size = 0; gcache.name = /var/lib/mysql//galera.cache; gcache.page_size = 128M; gcache.size = 128M; gcs.fc_debug = 0; gcs.fc_factor = 0.5; gcs.fc_limit = 16; gcs.fc_master_slave = NO; gcs.max_packet_size = 64500; gcs.max_throttle = 0.25; gcs.recv_q_hard_limit = 9223372036854775807; gcs.recv_q_soft_limit = 0.25; gcs.sync_donor = NO; replicator.causal_read_timeout = PT30S; replicator.commit_order = 3
+	120908 16:28:07 [Note] WSREP: Assign initial position for certification: -1, protocol version: -1
+	120908 16:28:07 [Note] WSREP: wsrep_sst_grab()
+	120908 16:28:07 [Note] WSREP: Start replication
+	120908 16:28:07 [Note] WSREP: Setting initial position to 00000000-0000-0000-0000-000000000000:-1
+	120908 16:28:07 [Note] WSREP: protonet asio version 0
+	120908 16:28:07 [Note] WSREP: backend: asio
+	120908 16:28:07 [Note] WSREP: GMCast version 0
+	120908 16:28:07 [Note] WSREP: (689232bb-f9c1-11e1-0800-7b6be4bd1ee4, 'tcp://0.0.0.0:4567') listening at tcp://0.0.0.0:4567 
+	120908 16:28:07 [Note] WSREP: (689232bb-f9c1-11e1-0800-7b6be4bd1ee4, 'tcp://0.0.0.0:4567') multicast: , ttl: 1
+	120908 16:28:07 [Note] WSREP: EVS version 0
+	120908 16:28:07 [Note] WSREP: PC version 0
+	120908 16:28:07 [Note] WSREP: gcomm: connecting to group 'trimethylxanthine', peer ''
+	120908 16:28:07 [Note] WSREP: view(view_id(PRIM,689232bb-f9c1-11e1-0800-7b6be4bd1ee4,1) memb {
+	        689232bb-f9c1-11e1-0800-7b6be4bd1ee4,
+	} joined {
 	} left {
 	} partitioned {
 	})
-	120809 21:06:52 [Note] WSREP: gcomm: connected
-	120809 21:06:52 [Note] WSREP: Changing maximum packet size to 64500, resulting msg size: 32636
-	120809 21:06:52 [Note] WSREP: Shifting CLOSED -> OPEN (TO: 0)
-	120809 21:06:52 [Note] WSREP: Opened channel 'trimethylxanthine'
-	120809 21:06:52 [Note] WSREP: Waiting for SST to complete.
-	120809 21:06:52 [Note] WSREP: New COMPONENT: primary = yes, bootstrap = no, my_idx = 0, memb_num = 1
-	120809 21:06:52 [Note] WSREP: Starting new group from scratch: 613693f7-e255-11e1-0800-7cf8f5cc663d
-	120809 21:06:52 [Note] WSREP: STATE_EXCHANGE: sent state UUID: 6136aae9-e255-11e1-0800-eee50a9ab0f3
-	120809 21:06:52 [Note] WSREP: STATE EXCHANGE: sent state msg: 6136aae9-e255-11e1-0800-eee50a9ab0f3
-	120809 21:06:52 [Note] WSREP: STATE EXCHANGE: got state msg: 6136aae9-e255-11e1-0800-eee50a9ab0f3 from 0 (node1)
-	120809 21:06:52 [Note] WSREP: Quorum results:
+	120908 16:28:07 [Note] WSREP: gcomm: connected 
+	120908 16:28:07 [Note] WSREP: Changing maximum packet size to 64500, resulting msg size: 32636
+	120908 16:28:07 [Note] WSREP: Shifting CLOSED -> OPEN (TO: 0)
+	120908 16:28:07 [Note] WSREP: Opened channel 'trimethylxanthine'
+	120908 16:28:07 [Note] WSREP: Waiting for SST to complete.
+	120908 16:28:07 [Note] WSREP: New COMPONENT: primary = yes, bootstrap = no, my_idx = 0, memb_num = 1
+	120908 16:28:07 [Note] WSREP: Starting new group from scratch: 689311f2-f9c1-11e1-0800-12e3398b70c1
+	120908 16:28:07 [Note] WSREP: STATE_EXCHANGE: sent state UUID: 68932b53-f9c1-11e1-0800-e674d8b68320
+	120908 16:28:07 [Note] WSREP: STATE EXCHANGE: sent state msg: 68932b53-f9c1-11e1-0800-e674d8b68320
+	120908 16:28:07 [Note] WSREP: STATE EXCHANGE: got state msg: 68932b53-f9c1-11e1-0800-e674d8b68320 from 0 (node1)
+	120908 16:28:07 [Note] WSREP: Quorum results:
 	        version    = 2,
 	        component  = PRIMARY,
 	        conf_id    = 0,
@@ -257,33 +253,33 @@ You should see something similar in screen1 like following when the server resta
 	        act_id     = 0,
 	        last_appl. = -1,
 	        protocols  = 0/4/2 (gcs/repl/appl),
-	        group UUID = 613693f7-e255-11e1-0800-7cf8f5cc663d
-	120809 21:06:52 [Note] WSREP: Flow-control interval: [8, 16]
-	120809 21:06:52 [Note] WSREP: Restored state OPEN -> JOINED (0)
-	120809 21:06:52 [Note] WSREP: New cluster view: global state: 613693f7-e255-11e1-0800-7cf8f5cc663d:0, view# 1: Primary, number of nodes: 1, my index: 0, protocol version 2
-	120809 21:06:52 [Note] WSREP: SST complete, seqno: 0
-	120809 21:06:52 [Note] WSREP: Member 0 (node1) synced with group.
-	120809 21:06:52 [Note] WSREP: Shifting JOINED -> SYNCED (TO: 0)
-	120809 21:06:52 [Note] Plugin 'FEDERATED' is disabled.
-	120809 21:06:52 InnoDB: The InnoDB memory heap is disabled
-	120809 21:06:52 InnoDB: Mutexes and rw_locks use GCC atomic builtins
-	120809 21:06:52 InnoDB: Compressed tables use zlib 1.2.3
-	120809 21:06:52 InnoDB: Using Linux native AIO
-	120809 21:06:52 InnoDB: Initializing buffer pool, size = 128.0M
-	120809 21:06:52 InnoDB: Completed initialization of buffer pool
-	120809 21:06:52 InnoDB: highest supported file format is Barracuda.
-	120809 21:06:52  InnoDB: Waiting for the background threads to start
-	120809 21:06:53 Percona XtraDB (http://www.percona.com) 1.1.8-rel25.3 started; log sequence number 8566400
-	120809 21:06:53 [Note] Server hostname (bind-address): '192.168.70.2'; port: 3306
-	120809 21:06:53 [Note]   - '192.168.70.2' resolves to '192.168.70.2';
-	120809 21:06:53 [Note] Server socket created on IP: '192.168.70.2'.
-	120809 21:06:53 [Note] Event Scheduler: Loaded 0 events
-	120809 21:06:53 [Note] WSREP: wsrep_notify_cmd is not defined, skipping notification.
-	120809 21:06:53 [Note] WSREP: Assign initial position for certification: 0, protocol version: 2
-	120809 21:06:53 [Note] WSREP: Synchronized with group, ready for connections
-	120809 21:06:53 [Note] WSREP: wsrep_notify_cmd is not defined, skipping notification.
-	120809 21:06:53 [Note] /usr/sbin/mysqld: ready for connections.
-	Version: '5.5.24'  socket: '/var/lib/mysql/mysql.sock'  port: 3306  Percona XtraDB Cluster (GPL), wsrep_23.6.r340
+	        group UUID = 689311f2-f9c1-11e1-0800-12e3398b70c1
+	120908 16:28:07 [Note] WSREP: Flow-control interval: [8, 16]
+	120908 16:28:07 [Note] WSREP: Restored state OPEN -> JOINED (0)
+	120908 16:28:07 [Note] WSREP: Member 0 (node1) synced with group.
+	120908 16:28:07 [Note] WSREP: Shifting JOINED -> SYNCED (TO: 0)
+	120908 16:28:07 [Note] WSREP: New cluster view: global state: 689311f2-f9c1-11e1-0800-12e3398b70c1:0, view# 1: Primary, number of nodes: 1, my index: 0, protocol version 2
+	120908 16:28:07 [Note] WSREP: SST complete, seqno: 0
+	120908 16:28:07 [Note] Plugin 'FEDERATED' is disabled.
+	120908 16:28:07 InnoDB: The InnoDB memory heap is disabled
+	120908 16:28:07 InnoDB: Mutexes and rw_locks use GCC atomic builtins
+	120908 16:28:07 InnoDB: Compressed tables use zlib 1.2.3
+	120908 16:28:07 InnoDB: Using Linux native AIO
+	120908 16:28:07 InnoDB: Initializing buffer pool, size = 128.0M
+	120908 16:28:07 InnoDB: Completed initialization of buffer pool
+	120908 16:28:07 InnoDB: highest supported file format is Barracuda.
+	120908 16:28:07  InnoDB: Waiting for the background threads to start
+	120908 16:28:08 Percona XtraDB (http://www.percona.com) 1.1.8-rel28.1 started; log sequence number 8566690
+	120908 16:28:08 [Note] Server hostname (bind-address): '192.168.70.2'; port: 3306
+	120908 16:28:08 [Note]   - '192.168.70.2' resolves to '192.168.70.2';
+	120908 16:28:08 [Note] Server socket created on IP: '192.168.70.2'.
+	120908 16:28:08 [Note] Event Scheduler: Loaded 0 events
+	120908 16:28:08 [Note] WSREP: wsrep_notify_cmd is not defined, skipping notification.
+	120908 16:28:08 [Note] WSREP: Assign initial position for certification: 0, protocol version: 2
+	120908 16:28:08 [Note] WSREP: Synchronized with group, ready for connections
+	120908 16:28:08 [Note] WSREP: wsrep_notify_cmd is not defined, skipping notification.
+	120908 16:28:08 [Note] /usr/sbin/mysqld: ready for connections.
+	Version: '5.5.27'  socket: '/var/lib/mysql/mysql.sock'  port: 3306  Percona XtraDB Cluster (GPL), wsrep_23.6.r356
 
 Note the following::
 
@@ -588,4 +584,19 @@ It is recommended that you run ``myq_status -t 1 wsrep`` on each node in a termi
 Step 6: Add node3
 ---------------------------------
 
-You should know enough now to add node3 to the cluster at this point.  
+You should know enough now to add node3 to the cluster at this point.  Go ahead and try without reading further.  
+
+Some hints if you have trouble:
+
+- Don't forget to change the IP address for node3 when you copy the my.cnf.  Also be sure to change the node name.
+- If the server aborts for some reason during SST, sometimes the SST processes hang and hold open the default SST port (4444).  You may need to kill these processes off before you retry to start the node.
+
+
+Before you go: cleanup
+-----------------------
+
+Before you continue on to other modules, you may want to re-provision your nodes to make sure everything is in a clean and working order::
+
+	host> vagrant provision
+
+This may make some minor changes to your config files and restart some nodes, but when it is done, the cluster should be working again with all three nodes.

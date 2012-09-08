@@ -5,9 +5,21 @@ Percona XtraDB Cluster Initial Setup
    :backlinks: entry
    :local:
 
+How to work through this Tutorial
+----------------------------------
+
+The basic steps are as follows:
+
+#. Setup your environment (see below)
+#. Familiarize yourself with how to use vagrant (i.e., ssh to nodes, etc.)
+#. Pick a module and work through it.  Typically it's best to start with the ``01-Progressive Setup`` module, but generally you can work through any module in any order
+#. After you finish each module, be sure to shutdown any test processes you may have running, and you may want to run ``vagrant provision`` again to restore the cluster back to original working order.
+
+Setting up your Environment
+--------------------------
 
 TL;DR
--------
+~~~~~~~
 
 It's a **very** good idea to do these steps *before* the tutorial session because conference WiFi tends to be unreliable at best.  At a minimum, at least do up through the step to download the centos6 box, which is several hundred MB.
 
@@ -24,7 +36,7 @@ It's a **very** good idea to do these steps *before* the tutorial session becaus
 That should do it!
 
 What does this actually do?
----------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The basic flow of what's happening above is:
 
@@ -115,8 +127,11 @@ screen#
 	Often the walkthrough instructions assume you have multiple windows or screens open so you can watch multiple things at once.  This can be a physically separate terminal window, or a unix `screen` window if you are comfortable with it.  Note that `screen` is preinstalled on the nodes for your convenience.
 
 
+Ways to test the Cluster
+------------------------
+
 Running pt-heartbeat
----------------------
+~~~~~~~~~~~~~~~~~~~~
 
 I use pt-heartbeat in my PXC testing to show when there are replication hiccups and delays.  Due to a limitation of pt-heartbeat, we must create a legacy version of the heartbeat table that will work with PXC::
 
@@ -146,3 +161,40 @@ One node1, let's monitor the heartbeat::
 	   0s [  0.00s,  0.00s,  0.00s ]
 
 This output will show us if there are any delays in the heartbeat compared with the current time.  
+
+
+Using sysbench to generate load
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+To simulate a live environment, we will kick off setup and kickoff a sysbench oltp test with a single test thread.
+
+**Prepare the test table**
+
+	[root@node1 ~]# sysbench --test=sysbench_tests/db/common.lua --mysql-user=root --mysql-db=test --oltp-table-size=250000 prepare
+
+
+**Start a Test run**
+
+	[root@node1 ~]# sysbench --test=sysbench_tests/db/oltp.lua --mysql-user=root --mysql-db=test --oltp-table-size=250000 --report-interval=1 --max-requests=0 --tx-rate=10 run | grep tps
+	[   1s] threads: 1, tps: 11.00, reads/s: 154.06, writes/s: 44.02, response time: 41.91ms (95%)
+	[   2s] threads: 1, tps: 18.00, reads/s: 252.03, writes/s: 72.01, response time: 24.02ms (95%)
+	[   3s] threads: 1, tps: 9.00, reads/s: 126.01, writes/s: 36.00, response time: 20.74ms (95%)
+	[   4s] threads: 1, tps: 13.00, reads/s: 181.97, writes/s: 51.99, response time: 19.19ms (95%)
+	[   5s] threads: 1, tps: 13.00, reads/s: 182.00, writes/s: 52.00, response time: 22.75ms (95%)
+	[   6s] threads: 1, tps: 10.00, reads/s: 140.00, writes/s: 40.00, response time: 22.35ms (95%)
+	[   7s] threads: 1, tps: 13.00, reads/s: 181.99, writes/s: 52.00, response time: 21.09ms (95%)
+	[   8s] threads: 1, tps: 13.00, reads/s: 181.99, writes/s: 52.00, response time: 23.71ms (95%)
+
+Your performance may vary.  Note we are setting ``--tx-rate`` as a way to prevent your VMs from working too hard.  Feel free to adjust ``-tx-rate`` accordingly, but be sure that you have several operations a second for the following tests.  
+
+As the WARNING message indicates, this test will go forever until you ``Ctrl-C`` it.  You can kill and restart this test at any time
+
+**Cleanup test table**
+
+Note that if you mess something up, you can cleanup the test table and start these steps over if needed::
+
+	[root@node1 ~]# sysbench --test=sysbench_tests/db/common.lua --mysql-user=root --mysql-db=test cleanup
+	sysbench 0.5:  multi-threaded system evaluation benchmark
+
+	Dropping table 'sbtest1'...
+
