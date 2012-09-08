@@ -95,14 +95,14 @@ Let's simulate a case where one node gets out of sync with the others.  With nod
 
 You should see something like this in node3's error log::
 
-	120908 17:44:16 [ERROR] Slave SQL: Could not execute Update_rows event on table percona.heartbeat; Can't find record in 'heartbeat', Error_code: 1032; handler error HA_ERR_KEY_NOT_FOUND; the event's master log FIRST, end
-	_log_pos 108, Error_code: 1032
+	120908 17:44:16 [ERROR] Slave SQL: Could not execute Update_rows event on table percona.heartbeat; Can't find record in 'heartbeat', Error_code: 1032; handler error HA_ERR_KEY_NOT_FOUND; the event's master log FIRST, end_log_pos 108, Error_code: 1032
 	120908 17:44:16 [Warning] WSREP: RBR event 2 Update_rows apply warning: 120, 1320
-	120908 17:44:16 [ERROR] WSREP: Failed to apply trx: source: 12e18919-f9c8-11e1-0800-a54166ff94af version: 2 local: 0 state: APPLYING flags: 1 conn_id: 1024 trx_id: 6223 seqnos (l: 237, g: 1320, s: 1319, d: 1319, ts: 1347119056001170054)120908 17:44:16 [ERROR] WSREP: Failed to apply app buffer: <D0>gKP^S, seqno: 1320, status: WSREP_FATAL
+	120908 17:44:16 [ERROR] WSREP: Failed to apply trx: source: 12e18919-f9c8-11e1-0800-a54166ff94af version: 2 local: 0 state: APPLYING flags: 1 conn_id: 1024 trx_id: 6223 seqnos (l: 237, g: 1320, s: 1319, d: 1319, ts: 1347119056001170054)
+	120908 17:44:16 [ERROR] WSREP: Failed to apply app buffer: <D0>gKP^S, seqno: 1320, status: WSREP_FATAL
 	         at galera/src/replicator_smm.cpp:apply_wscoll():49
-	         at galera/src/replicator_smm.cpp:apply_trx_ws():120120908 17:44:16 [ERROR] WSREP: Node consistency compromized, aborting...
+	         at galera/src/replicator_smm.cpp:apply_trx_ws():120
+	120908 17:44:16 [ERROR] WSREP: Node consistency compromized, aborting...
 
-- What happens to node3?
 - How does the cluster fix this problem?
 - When will this problem be detected?
 - What is the advantage of this approach?
