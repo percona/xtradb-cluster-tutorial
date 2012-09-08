@@ -590,3 +590,13 @@ Some hints if you have trouble:
 
 - Don't forget to change the IP address for node3 when you copy the my.cnf.  Also be sure to change the node name.
 - If the server aborts for some reason during SST, sometimes the SST processes hang and hold open the default SST port (4444).  You may need to kill these processes off before you retry to start the node.
+
+
+Before you go: cleanup
+-----------------------
+
+Before you continue on to other modules, you may want to re-provision your nodes to make sure everything is in a clean and working order::
+
+	host> vagrant provision
+
+This may make some minor changes to your config files and restart some nodes, but when it is done, the cluster should be working again with all three nodes.
