@@ -118,7 +118,93 @@ And we can do work on node1::
 	+----+---------------------+
 
 - What happens if node3's network issue is fixed?
-- Is it necessary to know node3's state before this?
+- Operationally, is it necessary to know node3's state before you bootstrap node1?
+
+*NOTE* the bootstrap is not a setting per-se, it only seems to *reset* the quorum state once.  The setting itself does not show up in SHOW VARIABLES and does not persist.
+
+**NOTE** Be sure both nodes are talking to each other before continuing.
 
 
-Now
+Ignoring Quorum on one Node
+-----------------------------
+
+It's possible to tell Galera to ignore the quorum calculation in the case of node failure.  Let's see what happens with that enabled.
+
+	node1 mysql> set global wsrep_provider_options="pc.ignore_quorum=true"; 
+	Query OK, 0 rows affected (0.00 sec)
+
+Now "fail" node3.
+
+You should see the following in ``myq_status`` on node1::
+
+
+	Wsrep    Cluster         Node                 Flow        Replicated      Received
+	    time stat conf size   rdy  cmt  ctd dist  paus sent   que  ops size   que  ops size
+	21:53:47 Prim   17    2    ON Sync   ON  0.0  0.00    0     0  0.0    0     0  0.0    0
+	21:53:48 Prim   17    2    ON Sync   ON  0.0  0.00    0     0  0.0    0     0  0.0    0
+	21:53:49 Prim   17    2    ON Sync   ON  0.0  0.00    0     0  0.0    0     0  0.0    0
+	21:53:50 Prim   17    2    ON Sync   ON  0.0  0.00    0     0  0.0    0     0  0.0    0
+	21:53:51 Prim   18    1    ON Sync   ON  0.0  0.00    0     0  0.0    0     0  1.0  119
+	21:53:52 Prim   18    1    ON Sync   ON  0.0  0.00    0     0  0.0    0     0  0.0    0
+	21:53:54 Prim   18    1    ON Sync   ON  0.0  0.00    0     0  0.0    0     0  0.0    0
+	21:53:55 Prim   18    1    ON Sync   ON  0.0  0.00    0     0  0.0    0     0  0.0    0
+
+The cluster dropped to a 1 node cluster on node1, and still handles traffic (no bootstrapping required)::
+
+	node1 mysql> select * from percona.heartbeat;
+	+----+---------------------+
+	| id | ts                  |
+	+----+---------------------+
+	|  1 | 2012-09-10 20:58:33 |
+	+----+---------------------+
+	1 row in set (0.00 sec)
+
+- What is the state of node3?
+- What does node3's log say?
+- Does it make a difference if the iptables traffic is dropped on node1 instead of node3?  (Hint: block 192.168.70.4 from incoming and outgoing traffic on node1 )
+- Why is node3 chosen for non-Primary?
+- What is the apparent difference between this and manually setting the ``pc.bootstrap`` option?
+- Operationally, does this hold advantages over the manual bootstrap setting?  Are there any disadvantages?
+
+**NOTE** Be sure both nodes are talking to each other before continuing.
+
+
+Ignoring Quorum on both nodes
+-----------------------------
+
+Same situation as the last section, but this time, apply the ``ignore_quorum`` setting to both nodes::
+
+	node1 mysql> set global wsrep_provider_options="pc.ignore_quorum=true"; 
+	Query OK, 0 rows affected (0.00 sec)
+	
+	node3 mysql> set global wsrep_provider_options="pc.ignore_quorum=true"; 
+	Query OK, 0 rows affected (0.00 sec)
+
+- What is the status of each node?
+- Will each node accept MySQL operations?
+- Can you write to both nodes?
+- What happens to the node status if the network partition gets repaired?
+- What do you have to do to get a 2 node cluster back?
+- What happens to those writes when the network is repaired?
+- Operationally, does running this way have any merit?
+
+**NOTE** Re-enable quorum detection on both nodes.  I found the cleanest way to was to simply restart mysql on each node in turn.
+
+
+Optional: Ignoring Split Brain 
+--------------------------------
+
+Try precisely the same steps in the last two sections, but use pc.ignore_quorum=true instead.   You can also try combining both ignore_sb and ignore_quorum.  
+
+- Do you notice any differences in behavior?
+- Any operational advantages here?
+
+
+Conclusion
+------------
+
+In my experiments, I didn't see any obvious difference in behavior in setting ignore_sb and ignore_quorum (I'm looking for more knowledge here).  It would be my advice to *never* use these settings under any circumstances.  
+
+If a two node or two colocation PXC cluster was in use, I would recommend a manual failover option so a *human being* can choose a remaining node (or set of nodes) to bootstrap there to re-enable operations.  This should prevent the other partition from *ever* taking writes until network connectivity is fully restored.
+
+If you want automation in a two node/colo setup, you should use an arbitrator in 3rd node/colocation, that's what it's for.  You *cannot* reliably do automated failover with only two nodes/colos, *unless* you always select a single node/colo to remain "up" on a failure.  
