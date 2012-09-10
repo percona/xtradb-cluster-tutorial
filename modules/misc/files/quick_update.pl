@@ -12,10 +12,16 @@ $| = 1;
 my $dbh = DBI->connect( "DBI:mysql:database=percona", 'root', '' ) or die "Could not connect: $!";
 my $i = 0;
 
+sub bail_out {
+	
+}
+
 while( 1 ) {
 	my $start = [gettimeofday];
 	
-	$dbh->do("update heartbeat set ts=NOW() where id=1" ) or die "Could not update!: $!";
+	my $bailout = undef;
+	
+	$dbh->do("update heartbeat set ts=NOW() where id=1" ) or $bailout = $!; 
 	
 	my $interval = tv_interval( $start );
 	if( $interval > $threshold ) {
@@ -26,4 +32,7 @@ while( 1 ) {
 		print "\r" . $i++;
 		sleep( 0.010 );
 	}
+
+		die "Could not update!: $bailout" if defined $bailout;
+	
 }
