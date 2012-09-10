@@ -106,12 +106,3 @@ Now, let's simulate a network issue from node1 to node3::
 
 - Does the heartbeat continue?
 - Does it cause any delay?
-
-Cleanup
--------
-
-Be sure to stop iptables on all nodes you may have started it on before doing another modules.  Or, just run::
-
-	host> vagrant provision
-
-which should cleanup anything you did to mess up your environment.
