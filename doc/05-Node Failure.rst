@@ -11,28 +11,8 @@ Monitoring transactional latency
 
 Node failure causes cluster write latency while the failed/disconnected node is detected.  This is accordance with the CAP Theorem:  that is: you can have 2 of "consistency", "availability", and "partition tolerance", but not 3.  PXC blocking (briefly) on node failure is giving us consistency and partition tolerance at the cost of availability.  
 
-To illustrate high client write latency, I have created a script called ``quick_update.pl``, which should be in your path.  This script does the following:
-	- Runs the same UPDATE command that pt-heartbeat does, though with only 10ms of sleep between each execution. It updates and prints a counter on each execution. 
-	- If it detects any of the UPDATEs took more than 50ms (this is configurable if you edit the script), then it prints 'slow', the date timestamp, and the final query latency is printed (in seconds) when the query does finish.  
+Follow the setup for ``Monitoring commit latency`` in the Initial Setup document.  You should end up with node1 running repeated UPDATE transactions in one terminal window (that you can watch).  
 
-If you haven't done so yet, create the ``percona`` schema and the ``heartbeat`` table::
-
-	node2 mysql> create schema percona;
-	use percona;
-	CREATE TABLE heartbeat (
-		id int NOT NULL PRIMARY KEY,
-		ts datetime NOT NULL
-	);
-	insert into heartbeat (id, ts) values (1, NOW());
-	
-The execution looks something like::
-
-	[root@node1 ~]# quick_update.pl 
-	9886
-	slow: Wed Aug 15 15:01:19 CEST 2012 0.139s
-	10428
-
-Note that occasionally the writes to the 3 node cluster setup on VMs on your laptop might be sporadically slow. This can be taken as noise.  
 
 Test nodes
 ----------
