@@ -9,7 +9,7 @@ Node Failure
 Monitoring transactional latency
 -------------------------------
 
-Node failure causes cluster write latency while the failed/disconnected node is detected.  This is accordance with the CAP Theorem:  that is, you can have 2 of "consistency", "availability", and "partition tolerance", but not 3.  PXC blocking (briefly) on node failure is giving us consistency and partition tolerance at the cost of availability.  
+Node failure causes cluster write latency while the failed/disconnected node is detected.  This is accordance with the CAP Theorem:  that is: you can have 2 of "consistency", "availability", and "partition tolerance", but not 3.  PXC blocking (briefly) on node failure is giving us consistency and partition tolerance at the cost of availability.  
 
 To illustrate high client write latency, I have created a script called ``quick_update.pl``, which should be in your path.  This script does the following:
 	- Runs the same UPDATE command that pt-heartbeat does, though with only 10ms of sleep between each execution. It updates and prints a counter on each execution. 
@@ -51,8 +51,7 @@ What does explicitly starting and stopping nodes in our cluster do to our write 
 	[root@node3 ~]# date; service mysql restart
 
 - What is the observed effect on writes?  
-
-Feel free to try this repeatedly.
+- Are those results consistent? (Feel free to try this repeatedly)
 
 
 Partial network failure
@@ -64,6 +63,14 @@ As an experiment, let's see what happens if node3 only looses connectivity to no
 
 - Does node3 stay in the cluster?
 - What effect does this have on writes?
+- How is replication working in this case?
+
+When you are ready to allow node3 to communicate with the other nodes, simply stop the iptables service::
+
+	[root@node3 ~]# service iptables stop
+	iptables: Flushing firewall rules:                         [  OK  ]
+	iptables: Setting chains to policy ACCEPT: filter          [  OK  ]
+	iptables: Unloading modules:                               [  OK  ]
 
 **Make sure to restore communications to and from all nodes before going to the next step!!**
 
@@ -77,9 +84,10 @@ A graceful node mysqld shutdown should behave differently from a node that simpl
 	iptables -A INPUT -s 192.168.70.3 -j DROP; iptables -A OUTPUT -s 192.168.70.2 -j DROP; \
 	iptables -A OUTPUT -s 192.168.70.3 -j DROP
 
-What is the observed effect?  
+- What is the observed effect on write latency?
+- What happens to node3's state?
 
-When you are ready to allow node3 to communicate with the other nodes, simply stop the iptables service::
+Now, restore connectivity:
 
 	[root@node3 ~]# service iptables stop
 	iptables: Flushing firewall rules:                         [  OK  ]
@@ -88,6 +96,7 @@ When you are ready to allow node3 to communicate with the other nodes, simply st
 
 - What happens when the node can talk to the cluster again?
 - Does this action have any noticeable effect on write latency?
+- What does node3's log say about how it re-synced with the cluster?
 
 **Make sure to restore communications to and from all nodes before going to the next step!!**
 
@@ -101,12 +110,12 @@ Read Codership's `node failure documentation <http://www.codership.com/wiki/doku
 
 Here are the default variables as I see them as they would be configured in the my.cnf::
 
-	SET GLOBAL wsrep_provider_options = "evs.keepalive_period=PT1S;evs.inactive_check_period=PT0.5S;evs.suspect_timeout=PT5S;evs.inactive_timeout=PT15S;evs.consensus_timeout=PT30S"
+	wsrep_provider_options = "evs.keepalive_period=PT1S;evs.inactive_check_period=PT0.5S;evs.suspect_timeout=PT5S;evs.inactive_timeout=PT15S;evs.consensus_timeout=PT30S"
 
 We can see that the default settings don't appear to follow the rules from the documentation.  However, let's see what we can do to retune the cluster.  Based the above documentation and the `galera provider options <http://www.codership.com/wiki/doku.php?id=galera_parameters_0.8>`_, make a guess about what should be tuned and see how it affects write latencies.  Some notes:
 
 - Setting bad values here can either cause mysqld to crash on restart, or (occasionally) spew helpful error messages into the mysql error log
-- You can use SET GLOBAL or put the settings in the my.cnf on each node and restart.
+- You must put the settings in the my.cnf on each node and restart.
 - Try setting only a subset of variables. 
 - Try making only very incremental changes.
 - You have to change the setting on all the nodes separately, there is no way to apply a setting to all nodes in the cluster at once.
@@ -115,8 +124,5 @@ We can see that the default settings don't appear to follow the rules from the d
 
 Questions:
 
-- What timeout ended up being most effective?
+- What timeout setting ended up being most effective?
 - What are the tradeoffs of how you retuned the settings compared with the defaults? 
-
-
-SET GLOBAL wsrep_provider_options = "evs.keepalive_period=PT0.3S;evs.suspect_timeout=PT1S"
