@@ -87,11 +87,7 @@ At this point, we should see the cluster recover naturally::
 Bootstrapping a minority of Cluster nodes
 ------------------------------------------
 
-So you should be capable of inducing a node failure now.  Do so now, and leave node1 in the non-PRIMARY state.  Imagine it is 2AM and you got woken up to fix this problem:
-
-
-
- what do you do?
+So you should be capable of inducing a node failure now.  Do so now, and leave node1 in the non-PRIMARY state.  Imagine it is 2AM and you got woken up to fix this problem, what do you do?
 
 Fortunately, the answer is quite easy.  We tell node1 to bootstrap itself::
 
@@ -100,7 +96,29 @@ Fortunately, the answer is quite easy.  We tell node1 to bootstrap itself::
 
 As if by magic, the remaining node recovers itself.  
 
+	Wsrep    Cluster         Node                 Flow        Replicated      Received
+	    time stat conf size   rdy  cmt  ctd dist  paus sent   que  ops size   que  ops size
+	21:43:32 non- 1844    1   OFF Init   ON  0.0  0.00    0     0  0.0    0     0  0.0    0
+	21:43:33 non- 1844    1   OFF Init   ON  0.0  0.00    0     0  0.0    0     0  0.0    0
+	21:43:34 non- 1844    1   OFF Init   ON  0.0  0.00    0     0  0.0    0     0  0.0    0
+	21:43:35 non- 1844    1   OFF Init   ON  0.0  0.00    0     0  0.0    0     0  0.0    0
+	21:43:36 non- 1844    1   OFF Init   ON  0.0  0.00    0     0  0.0    0     0  0.0    0
+	21:43:37 Prim   16    1    ON Sync   ON  0.0  0.00    0     0  0.0    0     0  1.0  119
+	21:43:38 Prim   16    1    ON Sync   ON  0.0  0.00    0     0  0.0    0     0  0.0    0
+	21:43:39 Prim   16    1    ON Sync   ON  0.0  0.00    0     0  0.0    0     0  0.0    0
+	21:43:40 Prim   16    1    ON Sync   ON  0.0  0.00    0     0  0.0    0     0  0.0    0
 
+And we can do work on node1::
+
+	node1 mysql> select * from percona.heartbeat;
+	+----+---------------------+
+	| id | ts                  |
+	+----+---------------------+
+	|  1 | 2012-09-10 20:58:33 |
+	+----+---------------------+
+
+- What happens if node3's network issue is fixed?
+- Is it necessary to know node3's state before this?
 
 
 Now
