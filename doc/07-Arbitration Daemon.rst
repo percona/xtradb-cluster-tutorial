@@ -27,6 +27,7 @@ Before we start, startup ``myq_status`` on one (or many) node(s) to watch the cl
 	22:41:23 Prim    7    3    ON Sync   ON    0     0    0     0    0    0     0    0    0
 	22:41:24 Prim    7    3    ON Sync   ON    0     0    0     0    0    0     0    0    0
 
+Also, startup the ``quick_update.pl`` script as described in the ``Monitoring commit latency`` section of the Initial Setup document so you can see the effect on application writes when the below happens.  
 
 Two node cluster without arbitration
 ------------------------------------
@@ -48,9 +49,9 @@ node1 remains up because node3 gracefully exited the cluster.  Bring node3 back 
 	Starting MySQL (Percona Server)..... SUCCESS!
 	[root@node3 ~]# iptables -A INPUT -s 192.168.70.2 -j DROP; iptables -A OUTPUT -s 192.168.70.2 -j DROP; 
 
-- What (eventually) happens?  Why?  How long does it take?
+- What (eventually) happens?  How long does it take?  Why?
 - What is the status of wsrep on both node1 and node3?
-- What happens if you try to do something on node1 or node3? (Try selecting a table).  
+- What happens if you try to do something on node1 or node3? (Try selecting a table or using a database).  
 - Can you write on either node?
 - What would the result be if your application were allowed to write to either node in this state?
 
@@ -82,6 +83,7 @@ Now that we have 3 nodes, we can simulate node3 going down (network loss to both
 	iptables -A OUTPUT -s 192.168.70.3 -j DROP
 
 - What (eventually) happens?  Why?  How long does it take?
+- What is the advantage of using garbd in this case?
 
 Again, recover node3 by stopping iptables::
 
@@ -103,6 +105,7 @@ Now, let's simulate a network issue from node1 to node3::
 	[root@node3 ~]# iptables -A INPUT -s 192.168.70.2 -j DROP; iptables -A OUTPUT -s 192.168.70.2 -j DROP; 
 
 - Does the heartbeat continue?
+- Does it cause any delay?
 
 Cleanup
 -------
