@@ -76,8 +76,8 @@ Scan the error.log on node3 for references to IST.  You should see (amongst a lo
 	...
 	120810 19:07:43 [Note] WSREP: 1 (node2): State transfer to 0 (node3) complete.
 
-What port did IST use on node3?
-
+- What port did IST use on node3?
+- What are the limitations of IST?
 
 What happens if IST doesn't work
 --------------------------------
