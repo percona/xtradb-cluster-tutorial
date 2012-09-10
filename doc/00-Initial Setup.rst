@@ -163,6 +163,33 @@ One node1, let's monitor the heartbeat::
 This output will show us if there are any delays in the heartbeat compared with the current time.  
 
 
+Monitoring commit latency
+----------------------------
+
+To illustrate high client write latency, I have created a script called ``quick_update.pl``, which should be in your path.  This script does the following:
+	- Runs the same UPDATE command that pt-heartbeat does, though with only 10ms of sleep between each execution. It updates and prints a counter on each execution. 
+	- If it detects any of the UPDATEs took more than 50ms (this is configurable if you edit the script), then it prints 'slow', the date timestamp, and the final query latency is printed (in seconds) when the query does finish.  
+
+If you haven't done so yet, create the ``percona`` schema and the ``heartbeat`` table as per the last section::  
+
+	node2 mysql> create schema percona;
+	use percona;
+	CREATE TABLE heartbeat (
+		id int NOT NULL PRIMARY KEY,
+		ts datetime NOT NULL
+	);
+	insert into heartbeat (id, ts) values (1, NOW());
+	
+The execution looks something like::
+
+	[root@node1 ~]# quick_update.pl 
+	9886
+	slow: Wed Aug 15 15:01:19 CEST 2012 0.139s
+	10428
+
+Note that occasionally the writes to the 3 node cluster setup on VMs on your laptop might be sporadically slow. This can be taken as noise.  
+
+
 Using sysbench to generate load
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

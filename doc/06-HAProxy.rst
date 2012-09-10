@@ -12,53 +12,46 @@ HAProxy is already installed and configured on node1.  However, let's walkthroug
 
 	[root@node1 ~]# baseline_haproxy.sh
 
+
 Setting and testing up Clustercheck
 -------------------------------------
 
 First of all, we need to setup a health check for HAProxy to use on each node.  PXC comes with a built in health check called 'clustercheck'.  Let's run this on our command line in node1 now::
 
-	[root@node1 ~]# clustercheck 
-	ERROR 1045 (28000): Access denied for user 'clustercheckuser'@'localhost' (using password: YES)
+	[root@node1 ~]# clustercheck
 	HTTP/1.1 503 Service Unavailable
-	
-	Content-Type: Content-Type: text/plain
-	
-	
-	
-	Node is *down*.
-	
-	
-	
+	Content-Type: text/plain
+
+	Percona XtraDB Cluster Node is not synced.
+
 This says our node is down, but is it?  Clustercheck is a shell script, look at ``/usr/bin/clustercheck`` in a text editor to see what it does.
 
 - How does it connect to MySQL?
 - What does it actually check? (`Hint <http://www.codership.com/wiki/doku.php?id=galera_node_fsm>`_)
-- What do you need to do to make it work?  For the purposes of this tutorial, try to do it without modifying the clustercheck script.
+- What do you need to do to make it work?  For the purposes of this tutorial, try to do it without modifying the clustercheck script, though enabling the ERR_FILE variable may help.
 
 After you fix it, it should start working::
 
-	[root@node1 ~]# clustercheck 
+	[root@node1 ~]# clustercheck
 	HTTP/1.1 200 OK
-	
-	Content-Type: Content-Type: text/plain
-	
-	
-	
-	Node is running.
+	Content-Type: text/plain
+
+	Percona XtraDB Cluster Node is synced.
 
 Note that we are going to run this as ``nobody``, so let's make sure that user can run it too::
 
 	[root@node1 ~]# su nobody -s /bin/bash -c clustercheck
 	HTTP/1.1 200 OK
+	Content-Type: text/plain
+
+	Percona XtraDB Cluster Node is synced.
 	
-	Content-Type: Content-Type: text/plain
-	
-	
-	
-	Node is running.
 
 This logs into the local mysql instance and checks the cluster status.  It should always return an HTTP result, and if it thinks the node is healthy, it will return a 200 HTTP response.  
 
+
+Hooking Clustercheck up to a TCP port
+--------------------------------------
 
 HAProxy can be configured to poll this on each node, but we need to somehow set this up as a daemon listening on a port for HAProxy to talk to.  For this purpose we use xinetd.  The nuances of xinetd aren't incredibly important here, but note that it will listen on a set of ports and will fork programs to answer incoming TCP requests on those ports on request.  
 
@@ -84,7 +77,9 @@ Add the xinetd configuration for clustercheck by creating a file called in ``/et
 	        per_source = UNLIMITED
 	}
 
-This creates a listen port on 9200 and will fork a clustercheck for each connection there.  Now, start xinetd::
+This creates a listen port on 9200 and will fork a clustercheck for each connection there.  Note that the PXC server package contains a version of this config, but it needs modification out of the box.  
+
+Now, start xinetd::
 
 	service xinetd restart
 
@@ -93,7 +88,7 @@ We can check if the service works via curl::
 	curl http://192.168.70.2:9200
 
 - Does it work?
-- What happens if you curl 172.0.0.1:9200 instead?  Why?
+- What happens if you curl 127.0.0.1:9200 instead?  Why?
 
 If you've reached this point, then you have a working health check on node1.  The other nodes should already have this setup, but you can run ``baseline_haproxy.pl`` and set this up on those if you have extra time and/or want the exercise.
 
@@ -102,12 +97,10 @@ If you've reached this point, then you have a working health check on node1.  Th
 - Experiment with putting the nodes into various states to see if clustercheck reacts how you'd expect.
 
 
-Configuring HAProxy for a slave reads port
-------------------------------------------
+Configuring HAProxy for a rotation of all nodes
+-----------------------------------------------
 
 Now that we have working health checks, let's start configuring HAProxy.  For our purposes, we'll only run haproxy on node1.  Let's create a baseline config in /etc/haproxy/haproxy.cfg::
-
-	# this config needs haproxy-1.4.19
 
 	global
 	        log 127.0.0.1   local0
@@ -237,6 +230,6 @@ This looks very similar to our previous configuration, except for the port numbe
 
 - How does this look in the HAProxy admin page?
 - Where do the connections go if node1 fails?
-- What about connections already on node2 if node1 recovers?  Is there any way to fix this?
+- What happens to connections already on node2 if node1 recovers?  Is there any way to fix this?
 
 

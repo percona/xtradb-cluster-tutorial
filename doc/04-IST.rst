@@ -8,8 +8,11 @@ Incremental State Transfer (IST)
 What is IST?
 -------------
 
-IST is used to avoid full SST for temporary node outages.  Note that it uses a completely separate port from SST.
+IST is used to avoid full SST for temporary node outages.  The general idea is that if a node goes down in a known state, misses some replication events, and them comes back online, the cluster should be able to feed those events to that node without requiring a full State Transfer.  
 
+Each node has something called the Gcache, which is temporary local storage of writesets that have been replicated across the cluster.  Provided all the needed replication events can be found in some working node in the cluster, IST can be performed.  
+
+Note that IST uses a completely separate port from SST.  
 
 Checking IST configuration
 ---------------------------
@@ -45,7 +48,9 @@ Setup pt-heartbeat again on node2::
 
 	[root@node2 ~]# pt-heartbeat --update --database percona
 
-We now have a write every second going into node2.  Let's stop node3 briefly and watch the error log:
+*NOTE*: if you haven't setup pt-heartbeat yet, refer to the ``Running pt-heartbeat`` section of the Initial Setup document.
+
+We should now have a write every second going into node2.  Let's stop node3 briefly and watch the error log:
 
 screen1::
 
@@ -71,13 +76,13 @@ Scan the error.log on node3 for references to IST.  You should see (amongst a lo
 	...
 	120810 19:07:43 [Note] WSREP: 1 (node2): State transfer to 0 (node3) complete.
 
-What port did IST use on node3?
-
+- What port did IST use on node3?
+- What are the limitations of IST?
 
 What happens if IST doesn't work
 --------------------------------
 
-Unfortunately it's a bit confusing to setup IST sometimes, and it can get frustrating.  The wsrep_node_address option makes things a little easier, but before it came along, you had to configure ``ist.recv_addr`` directly in the ``wsrep_provider_options``.  Additionally, in setups with both public and private networks that you want to use for different things, you will have to still set this directly.  
+Unfortunately it's a bit confusing to setup IST sometimes, and it can get frustrating.  The ``wsrep_node_address`` option makes things a little easier, but before it came along, you had to configure ``ist.recv_addr`` directly in the ``wsrep_provider_options``.  Additionally, in setups with both public and private networks that you want to use for different things, you will have to still set this directly.  
 
 Currently ``ist.recv_addr`` is set to our node's ip.  Let's simulate it being misconfigured by adding this line to our my.cnf on node3::
 
@@ -93,7 +98,7 @@ Now, restart mysql on node3 (with the pt-heartbeat still running) and see what h
 	...
 	120810 21:02:11 [Note] WSREP: /usr/sbin/mysqld: Terminated.
 
-Whoops, this puppy is down!  We couldn't IST, so we barf.  Remove the ``wsrep_provider_options`` setting and restart.
+Whoops, this node refused to start!  We couldn't IST, so we barf.  Remove the ``wsrep_provider_options`` setting and restart.
 
 I see this:: 
 
@@ -103,5 +108,5 @@ I see this::
 	120810 21:04:54 [Note] WSREP: Received SST: 6fad8438-e25d-11e1-0800-eba2b7db20ad:2654
 	120810 21:04:54 [Note] WSREP: SST received: 6fad8438-e25d-11e1-0800-eba2b7db20ad:2654
 
-Whoops, full SST!  What happens here is when WSREP aborts, it drops its state.  Even when we restart our node with a correct ``ist.recv_addr``, it has to do a full SST because the local state is: ``00000000-0000-0000-0000-000000000000``.
+Whoops, full SST!  What happens here is when WSREP aborts, it drops its state.  Even when we restart our node with a correct ``ist.recv_addr``, it has to do a full SST because the local state has been reset to: ``00000000-0000-0000-0000-000000000000``.
 
