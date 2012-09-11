@@ -128,9 +128,9 @@ And we can do work on node1::
 Ignoring Quorum on one Node
 -----------------------------
 
-It's possible to tell Galera to ignore the quorum calculation in the case of node failure.  Let's see what happens with that enabled.
+It's possible to tell Galera to ignore the quorum calculation in the case of node failure.  Let's see what happens with that enabled::
 
-	node1 mysql> set global wsrep_provider_options="pc.ignore_quorum=true"; 
+	node1 mysql> set global wsrep_provider_options="pc.ignore_quorum=true";
 	Query OK, 0 rows affected (0.00 sec)
 
 Now "fail" node3.
