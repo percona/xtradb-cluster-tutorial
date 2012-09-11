@@ -169,41 +169,10 @@ The cluster dropped to a 1 node cluster on node1, and still handles traffic (no 
 **NOTE** Be sure both nodes are talking to each other before continuing.
 
 
-Ignoring Quorum on both nodes
------------------------------
-
-Same situation as the last section, but this time, apply the ``ignore_quorum`` setting to both nodes::
-
-	node1 mysql> set global wsrep_provider_options="pc.ignore_quorum=true"; 
-	Query OK, 0 rows affected (0.00 sec)
-	
-	node3 mysql> set global wsrep_provider_options="pc.ignore_quorum=true"; 
-	Query OK, 0 rows affected (0.00 sec)
-
-- What is the status of each node?
-- Will each node accept MySQL operations?
-- Can you write to both nodes?
-- What happens to the node status if the network partition gets repaired?
-- What do you have to do to get a 2 node cluster back?
-- What happens to those writes when the network is repaired?
-- Operationally, does running this way have any merit?
-
-**NOTE** Re-enable quorum detection on both nodes.  I found the cleanest way to was to simply restart mysql on each node in turn.
-
-
-Optional: Ignoring Split Brain 
---------------------------------
-
-Try precisely the same steps in the last two sections, but use pc.ignore_quorum=true instead.   You can also try combining both ignore_sb and ignore_quorum.  
-
-- Do you notice any differences in behavior?
-- Any operational advantages here?
-
-
 Conclusion
 ------------
 
-In my experiments, I didn't see any obvious difference in behavior in setting ignore_sb and ignore_quorum (I'm looking for more knowledge here).  It would be my advice to *never* use these settings under any circumstances.  
+In my experiments, I didn't see any obvious difference in behavior in setting ignore_sb and ignore_quorum (I'm looking for more knowledge here).  It would be my advice to *never* use ignore_sb under any circumstances and use ignore_quorum only under very special circumstances.  
 
 If a two node or two colocation PXC cluster was in use, I would recommend a manual failover option so a *human being* can choose a remaining node (or set of nodes) to bootstrap there to re-enable operations.  This should prevent the other partition from *ever* taking writes until network connectivity is fully restored.
 
