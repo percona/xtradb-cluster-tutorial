@@ -10,7 +10,7 @@ This repository contains both Tutorial documentation organized into modules and 
 Tutorial Students
 ------------------
 
-If you are attending a conference tutorial, start with ``doc/Initial Setup.rst``.  It is *highly* recommended you do these steps *before* the conference and are subjected to dodgy conference WiFi as the steps require downloading a lot of software.
+If you are attending a conference tutorial, start with the ``Setting up your Environment`` section of ``doc/Initial Setup.rst``.  It is *highly* recommended you do these steps *before* the conference and are subjected to dodgy conference WiFi as the steps require downloading a lot of software.
 
 
 Individual Learners
