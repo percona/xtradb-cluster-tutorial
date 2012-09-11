@@ -94,7 +94,7 @@ Fortunately, the answer is quite easy.  We tell node1 to bootstrap itself::
 	node1 mysql> set global wsrep_provider_options="pc.bootstrap=true";
 	Query OK, 0 rows affected (0.00 sec)
 
-As if by magic, the remaining node recovers itself.  
+As if by magic, the remaining node recovers itself::
 
 	Wsrep    Cluster         Node                 Flow        Replicated      Received
 	    time stat conf size   rdy  cmt  ctd dist  paus sent   que  ops size   que  ops size
