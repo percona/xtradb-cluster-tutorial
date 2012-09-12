@@ -167,7 +167,7 @@ This output will show us if there are any delays in the heartbeat compared with 
 
 
 Monitoring commit latency
-----------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 To illustrate high client write latency, I have created a script called ``quick_update.pl``, which should be in your path.  This script does the following:
 	- Runs the same UPDATE command that pt-heartbeat does, though with only 10ms of sleep between each execution. It updates and prints a counter on each execution. 
