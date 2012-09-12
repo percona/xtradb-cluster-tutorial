@@ -58,7 +58,7 @@ Valid question.
 
 - Currently the Vagrant file downloads a single CentOS base box that is around 300MB.  
 - It creates 3 individual Virtual machines that each use 256M of RAM.  
-- Unpacked and fully installed, each machines takes ~1.3G of disk space.  
+- Unpacked and fully installed, each machine takes ~1.3G of disk space.  
 - I have taken steps to try to minimize the CPU utilization during the modules, but there might be some cases where it gets somewhat high during some of the experiments.  
 
 
