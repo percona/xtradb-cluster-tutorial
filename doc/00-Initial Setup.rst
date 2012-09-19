@@ -23,8 +23,8 @@ TL;DR
 
 It's a **very** good idea to do these steps *before* the tutorial session because conference WiFi tends to be unreliable at best.  At a minimum, at least do up through the step to download the centos6 box, which is several hundred MB.
 
-#. Download and install Virtualbox from `here <https://www.virtualbox.org/wiki/Downloads>`_. (Current version: 4.1.22.  **NOTE**: 4.2.0 has just been released, but please `use 4.1 <https://www.virtualbox.org/wiki/Download_Old_Builds_4_1>`_ until I can verify everything works and Vagrant supports it)
-#. Download and install Vagrant from `here <http://vagrantup.com>`_.  Current version: 1.0.3
+#. Download and install Virtualbox from `here <https://www.virtualbox.org/wiki/Downloads>`_. (Current version: 4.1.22.  **NOTE**: 4.2.0 has just been released and seems to work with a little extra futzing with Vagrant.  You may choose to `use 4.1 <https://www.virtualbox.org/wiki/Download_Old_Builds_4_1>`_ for now.
+#. Download and install Vagrant from `here <http://vagrantup.com>`_.  Current version: 1.0.5
 #. Keep your virtual box guest additions updated automatically: ``host> vagrant gem install vagrant-vbguest``
 #. Download centos6 vagrant box: (310MB) (optional, `vagrant up` will do this automatically): ``vagrant box add centos6 https://dl.dropbox.com/u/7225008/Vagrant/CentOS-6.3-x86_64-minimal.box``
 #. Get a copy of this git repository: ``host> git clone https://github.com/jayjanssen/percona-xtradb-cluster-tutorial.git`` (or the git URL of your choice)
@@ -36,6 +36,17 @@ It's a **very** good idea to do these steps *before* the tutorial session becaus
 That should do it!  Sometimes some race conditions creep into the provisioning in the ``vagrant up`` causing errors, in such cases it's generally safe to either re-run ``vagrant up`` or ``vagrant provision``.
 
 If you have any problems beyond this, please open an issue in this github repository with the details.
+
+Problems with the setup
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+There are occasions where the ``vagrant up`` command can generate some errors and not fully complete.  All examples of this I have seen tend to be recoverable by trying a few workaround steps until the nodes are up and the provisioning (i.e. puppet) completes successfully.  Sometimes it's helpful to try the following commands only on the specific node having the issue.  The nodes are named ``node1``, ``node2``, ``node3`` and you can add them to the end of most (all?) vagrant commands to work only on that specific node.  
+
+- If the node appears to boot, but Puppet fails, try rerunning ``vagrant provision``
+- If the node appears to boot, but you can't ssh to it and it appears hung, first try ``vagrant halt <nodename>`` and if that doesn't work ``vagrant halt -f <nodename>``
+- With VirtualBox 4.2, I got it to work by running (for each node) ``vagrant up <nodename>; vagrant halt <nodename>; vagrant up <nodename>``
+- If you are still stuck, be sure you have the most recent version of this git repository and try again.
+- If you can't solve it, please `open an issue <https://github.com/jayjanssen/percona-xtradb-cluster-tutorial/issues>`_ with the details of your environment (OS, Vagrant and Virtualbox versions).
 
 
 What does this actually do?
