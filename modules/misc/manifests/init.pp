@@ -20,10 +20,12 @@ class misc {
 		'man': ensure => 'present';
 		'unzip': ensure => 'present';
 		'lsof': ensure => 'present';
-		'sysbench': provider => 'rpm', ensure => 'present', source   => "/vagrant/modules/misc/files/sysbench-0.5-3.el6_.x86_64.rpm", 
-			require => Package['MySQL-client'],
-    
-		 ;
+	}
+	
+	exec {
+		"yum localinstall -y /vagrant/modules/misc/files/sysbench-0.5-3.el6_.x86_64.rpm":
+			cwd => "/tmp",
+			unless => "rpm -q sysbench"
 	}
 	
 	file {
