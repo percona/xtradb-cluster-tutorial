@@ -23,9 +23,11 @@ class misc {
 	}
 	
 	exec {
-		"yum localinstall -y /vagrant/modules/misc/files/sysbench-0.5-3.el6_.x86_64.rpm":
+		"sysbench":
+			command => "/usr/bin/yum localinstall -y /vagrant/modules/misc/files/sysbench-0.5-3.el6_.x86_64.rpm",
 			cwd => "/tmp",
-			unless => "rpm -q sysbench"
+			unless => "/bin/rpm -q sysbench",
+			require => Package['MySQL-client'];
 	}
 	
 	file {
@@ -37,11 +39,12 @@ class misc {
 		"/root/sysbench_tests":
 			ensure => link,
 			target => '/usr/share/doc/sysbench/tests',
-			require => Package['sysbench'];
+			require => Exec['sysbench'];
 	}
 
 	exec {
-			"mkdir /root/bin 2> /dev/null; wget -O myq_gadgets-latest.tgz https://github.com/jayjanssen/myq_gadgets/tarball/master && tar xvzf myq_gadgets-latest.tgz -C /root/bin --strip-components=1":
+			"myq_gadgets":
+				command => "mkdir /root/bin 2> /dev/null; wget -O myq_gadgets-latest.tgz https://github.com/jayjanssen/myq_gadgets/tarball/master && tar xvzf myq_gadgets-latest.tgz -C /root/bin --strip-components=1",
 				cwd => "/tmp",
 				creates => "/root/bin/myq_status",
 				path => ['/bin','/usr/bin','/usr/local/bin'];
