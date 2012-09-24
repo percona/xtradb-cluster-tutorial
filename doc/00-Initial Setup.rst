@@ -28,7 +28,7 @@ It's a **very** good idea to do these steps *before* the tutorial session becaus
 #. *optional*:  Keep your virtual box guest additions updated automatically: ``host> vagrant gem install vagrant-vbguest``
 #. *optional*: Download centos6 vagrant box: (310MB) (`vagrant up` will do this automatically): ``vagrant box add centos6 https://dl.dropbox.com/u/7225008/Vagrant/CentOS-6.3-x86_64-minimal.box``
 #. Get a copy of this git repository: ``host> git clone https://github.com/jayjanssen/percona-xtradb-cluster-tutorial.git`` (or the git URL of your choice).  If you don't have git, you can just download a copy in `the compressed format of your choice here <https://github.com/jayjanssen/percona-xtradb-cluster-tutorial/downloads>`_.
-#. Run ``vagrant up``::
+#. Change directory into the root directory of the git repository and run ``vagrant up``::
 
 	cd pxc-tutorial
 	vagrant up
