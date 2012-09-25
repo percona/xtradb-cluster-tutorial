@@ -12,14 +12,18 @@ class misc {
 	}
 	service {
 			'iptables': ensure => 'stopped', enable => false;
+			'ntpdate': ensure => 'running', enable => true, require => Package['ntpdate'];
+			'ntpd': ensure => 'running', enable => true, require => [Package['ntp'], Service['ntpdate']];
 	}
-	
+
 	package {
 		'screen': ensure => 'present';
 		'telnet': ensure => 'present';
 		'man': ensure => 'present';
 		'unzip': ensure => 'present';
 		'lsof': ensure => 'present';
+		'ntp': ensure => 'present';
+		'ntpdate': ensure => 'present';
 	}
 	
 	exec {
