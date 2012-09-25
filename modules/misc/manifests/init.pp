@@ -12,8 +12,8 @@ class misc {
 	}
 	service {
 			'iptables': ensure => 'stopped', enable => false;
-			'ntpdate': ensure => 'running', enable => true, require => Package['ntpdate'];
-			'ntpd': ensure => 'running', enable => true, require => [Package['ntp'], Service['ntpdate']];
+			# 'ntpdate': ensure => 'running', enable => true, require => Package['ntpdate'];
+			'ntpd': ensure => 'running', enable => true, require => [Package['ntp']];
 	}
 
 	package {
