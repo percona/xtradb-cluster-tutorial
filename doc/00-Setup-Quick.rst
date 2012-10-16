@@ -10,8 +10,7 @@ Setup Steps
 
 #. `Download and install Virtualbox`_: http://virtualbox.org
 #. `Download and install Vagrant`_: http://vagrantup.com
-#. `Load the base vagrant box into your Vagrant environment`_: ``vagrant box add pxc-tutorial-preloaded http://bit.ly/pxc-tutorial-preloaded-box
-``
+#. `Load the base vagrant box into your Vagrant environment`_: ``vagrant box add pxc-tutorial-preloaded http://bit.ly/pxc-tutorial-preloaded-box``
 #. `Get a copy of this repository`_: ``git clone https://github.com/jayjanssen/percona-xtradb-cluster-tutorial.git``
 #. `Run _vagrant up_ from the root directory of this repository`_:: ``cd percona-xtradb-cluster-tutorial; vagrant up``
 
