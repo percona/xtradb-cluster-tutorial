@@ -5,11 +5,9 @@ Percona XtraDB Cluster Initial Setup
    :backlinks: entry
    :local:
 
-Setup Steps
--------------
 
 TL;DR
-~~~~~
+------
 
 #. `Download and install Virtualbox`_: http://virtualbox.org
 #. `Download and install Vagrant`_: http://vagrantup.com
@@ -18,6 +16,9 @@ TL;DR
 #. `vagrant up`_:: ``cd percona-xtradb-cluster-tutorial; vagrant up``
 #. Review the ``00-Tutorial-Process`` document about how to work through this tutorial.
 
+
+Detailed Setup Steps
+-------------
 
 Download and install Virtualbox
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
