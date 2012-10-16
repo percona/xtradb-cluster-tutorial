@@ -8,11 +8,14 @@ Percona XtraDB Cluster Initial Setup
 Setup Steps
 -------------
 
-#. **`Download and install Virtualbox`_**: http://virtualbox.org
+TL;DR
+~~~~~
+
+#. `Download and install Virtualbox`_: http://virtualbox.org
 #. `Download and install Vagrant`_: http://vagrantup.com
 #. `Load the base vagrant box into your Vagrant environment`_: ``vagrant box add pxc-tutorial-preloaded http://bit.ly/pxc-tutorial-preloaded-box``
 #. `Get a copy of this repository`_: ``git clone https://github.com/jayjanssen/percona-xtradb-cluster-tutorial.git``
-#. `Run vagrant up from the root directory of this repository`_:: ``cd percona-xtradb-cluster-tutorial; vagrant up``
+#. `vagrant up`_:: ``cd percona-xtradb-cluster-tutorial; vagrant up``
 
 
 Download and install Virtualbox
@@ -71,7 +74,7 @@ If you don't have git, you can simply download a copy of this repository in `the
 You will need a local copy of all the code and configuration in this git repository on your local machine.  If you don't have/like git, you can download it a full tarball/zip file from github.
 
 
-Run _vagrant up_ from the root directory of this repository
+vagrant up
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 ::
