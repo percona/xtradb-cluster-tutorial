@@ -10,9 +10,9 @@ How to work through this Tutorial
 
 The basic steps are as follows:
 
-#. Setup your environment (see below)
+#. Setup your environment (see ``00-Setup-Quick`` document)
 #. Familiarize yourself with how to use vagrant (i.e., ssh to nodes, etc.)
-#. Pick a module and work through it.  Typically it's best to start with the ``01-Progressive Setup`` module, but generally you can work through any module in any order
+#. Pick a module and work through it.  Typically it's best to start with the ``01-Progressive Setup`` module, but generally you can work through any module in any order.
 #. After you finish each module, be sure to shutdown any test processes you may have running, and you may want to run ``vagrant provision`` again to restore the cluster back to original working order.
 
 
@@ -52,7 +52,7 @@ Notes
 
 - Each node is running a primary IP on the 192.168.70.0/24 subnet.  For the purposes of these exercises, this is the network for all client connections as well as cluster replication and any other tasks.
 
-- Virtualbox *might* crash your laptop every once in a while.  If you don't like it, ask Oracle for your money back.
+- Virtualbox *might* crash your OSX laptop every once in a while.  The most common cause of this was reportedly fixed in Virtualbox 4.1.22, so an upgrade may help you there. 
 
 - Running the command ``baseline.sh`` on any node will do the following:
 
