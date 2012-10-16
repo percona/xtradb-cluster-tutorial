@@ -1,4 +1,4 @@
-Percona XtraDB Cluster Initial Setup
+Percona XtraDB Cluster Tutorial Process
 ========
 
 .. contents:: 

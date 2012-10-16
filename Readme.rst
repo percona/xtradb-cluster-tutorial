@@ -10,13 +10,15 @@ This repository contains both Tutorial documentation organized into modules and 
 Tutorial Students
 ------------------
 
-If you are attending a conference tutorial, start with the ``Setting up your Environment`` section of ``doc/Initial Setup.rst``.  It is *highly* recommended you do these steps *before* the conference and are subjected to dodgy conference WiFi as the steps require downloading a lot of software.
+If you are attending a conference tutorial, start with the *TL;DR* section of ``doc/00-Setup-Quick.rst``, as well as review that whole document and ``00-Tutorial-Process``.  
+
+It is recommended you do these steps *before* the conference to maximize time the whole class has to do the actual exercises.
 
 
 Individual Learners
 ---------------------
 
-If you are not attending a conference tutorial, you may wish to start follow the Tutorial steps rigidly above, or just get the working environment setup and start poking around.  In either case, the ``doc/Initial Setup.rst`` document for details on setting up the environment on the machine of your choosing.  
+If you are not attending a conference tutorial, you may wish to start follow the Tutorial steps rigidly above, or just get the working environment setup and start poking around.  In either case, the ``doc/00-Setup-Quick.rst`` document for details on setting up the environment on the machine of your choosing.  
 
 From there, all the documented modules under ``doc/`` are mostly self-contained, though some depend on previous steps modules to a degree.
 

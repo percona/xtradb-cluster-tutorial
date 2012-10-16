@@ -63,7 +63,7 @@ In this case node2 will always be selected to be the donor.
 Reads and writes on the Donor with xtrabackup SST
 -------------------------------------------------
 
-Follow the ``Running pt-heartbeat`` section of the ``00-Initial Setup`` document.  You should have a terminal open with pt-heartbeat running showing you any delay in the heartbeat when you are done.
+Follow the ``Running pt-heartbeat`` section of the ``00-Tutorial Process`` document.  You should have a terminal open with pt-heartbeat running showing you any delay in the heartbeat when you are done.
 
 Now, re-baseline node3 and restart an SST.  Carefully watch the heartbeat monitor on node1 and myq_status on node2 carefully.  
 

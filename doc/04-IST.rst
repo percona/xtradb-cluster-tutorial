@@ -48,7 +48,7 @@ Setup pt-heartbeat again on node2::
 
 	[root@node2 ~]# pt-heartbeat --update --database percona
 
-*NOTE*: if you haven't setup pt-heartbeat yet, refer to the ``Running pt-heartbeat`` section of the Initial Setup document.
+*NOTE*: if you haven't setup pt-heartbeat yet, refer to the ``Running pt-heartbeat`` section of the ``00-Tutorial-Process`` document.
 
 We should now have a write every second going into node2.  Let's stop node3 briefly and watch the error log:
 
