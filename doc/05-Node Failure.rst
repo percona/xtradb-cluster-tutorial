@@ -11,7 +11,7 @@ Monitoring transactional latency
 
 Node failure causes cluster write latency while the failed/disconnected node is detected.  This is accordance with the CAP Theorem:  that is: you can have 2 of "consistency", "availability", and "partition tolerance", but not 3.  PXC blocking (briefly) on node failure is giving us consistency and partition tolerance at the cost of availability.  
 
-Follow the setup for ``Monitoring commit latency`` in the Initial Setup document.  You should end up with node1 running repeated UPDATE transactions in one terminal window (that you can watch).  
+Follow the setup for ``Monitoring commit latency`` in the ``00-Tutorial-Process`` document.  You should end up with node1 running repeated UPDATE transactions in one terminal window (that you can watch).  
 
 
 Test nodes

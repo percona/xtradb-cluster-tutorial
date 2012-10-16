@@ -27,7 +27,7 @@ Before we start, startup ``myq_status`` on one (or many) node(s) to watch the cl
 	22:41:23 Prim    7    3    ON Sync   ON    0     0    0     0    0    0     0    0    0
 	22:41:24 Prim    7    3    ON Sync   ON    0     0    0     0    0    0     0    0    0
 
-Also, startup the ``quick_update.pl`` script as described in the ``Monitoring commit latency`` section of the Initial Setup document so you can see the effect on application writes when the below happens.  
+Also, startup the ``quick_update.pl`` script as described in the ``Monitoring commit latency`` section of the ``00-Tutorial-Process`` document so you can see the effect on application writes when the below happens.  
 
 Two node cluster without arbitration
 ------------------------------------
@@ -93,7 +93,7 @@ Again, recover node3 by stopping iptables::
 Replication through garbd
 ---------------------------
 
-One of the features of garbd that isn't obvious is that it can act as a replication relay in case the a direct network link is down between two of your normal nodes.  Let's test it out by using iptables rules to simulate a partial network breakage.  First, setup a heartbeat running on node1, and a monitor for it on node3 using the information in the Initial Setup document::
+One of the features of garbd that isn't obvious is that it can act as a replication relay in case the a direct network link is down between two of your normal nodes.  Let's test it out by using iptables rules to simulate a partial network breakage.  First, setup a heartbeat running on node1, and a monitor for it on node3 using the information in the ``00-Tutorial-Process`` document::
 
 	[root@node1 ~]# pt-heartbeat --update --database percona
 	[root@node3 ~]# pt-heartbeat --monitor --database percona

@@ -11,7 +11,7 @@ Step 0: baseline the nodes
 
 We are assuming here that you have successfully run `vagrant up` and created the 3 node PXC cluster using puppet.  Since this tutorial is intended to teach you how to migrate from an existing MySQL instance into a PXC cluster, we are now going to undo some of that work to give you a good baseline to start with.  To baseline your nodes, simply run::
 
-	host> baseline.sh
+	[root@node1 ~]# baseline.sh
 
 This will stop mysql on all your nodes, remove the my.cnf and wipe the datadirs. *Do this on all 3 nodes!*
 
