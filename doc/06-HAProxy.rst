@@ -211,7 +211,7 @@ Then restart haproxy and visit `http://192.168.70.2:9999/ <http://192.168.70.2:9
 Configuring HAProxy for a writer port
 -------------------------------------
 
-Our reader port is a load-balanced rotation of all nodes.  Howeve, for writes we may not want to send traffic to all the nodes, but only to one to avoid deadlocking errors.  Since PXC has synchronous replication, it's not hard to fail over writes, but we want to ensure that writes only go to a single node at a time, but can also failover automatically if that node goes down.  
+Our reader port is a load-balanced rotation of all nodes.  However, for writes we may not want to send traffic to all the nodes, but only to one to avoid deadlocking errors.  Since PXC has synchronous replication, it's not hard to fail over writes, but we want to ensure that writes only go to a single node at a time, but can also failover automatically if that node goes down.  
 
 Let's add the following config to the ``haproxy.cfg``::
 
