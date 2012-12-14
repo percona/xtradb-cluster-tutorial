@@ -2,7 +2,7 @@ class percona::repository {
 
 
  $releasever = "6"
- $basearch = $hardwaremodel
+ $basearch = "i386"
  yumrepo {
         "percona":
             descr       => "Percona",
