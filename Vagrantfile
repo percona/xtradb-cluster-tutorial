@@ -6,7 +6,7 @@ Vagrant::Config.run do |config|
   # Every Vagrant virtual environment requires a box to build off of.
   config.vm.define :node1 do |node1_config|
 		node1_config.vm.box = "centos6.3-i386-minimal"
-		# node1_config.vm.box_url = "http://bit.ly/pxc-tutorial-preloaded-box"
+		node1_config.vm.box_url = "https://dl.dropbox.com/u/2519414/centos6.3-i386-minimal.box"
 		node1_config.vm.host_name = "node1"
 		node1_config.vm.customize ["modifyvm", :id, "--memory", "256"]
 		node1_config.vm.network :hostonly, "192.168.70.2"
@@ -20,7 +20,7 @@ Vagrant::Config.run do |config|
   end
   config.vm.define :node2 do |node2_config|
 		node2_config.vm.box = "centos6.3-i386-minimal"
-		# node2_config.vm.box_url = "http://bit.ly/pxc-tutorial-preloaded-box"
+		node2_config.vm.box_url = "https://dl.dropbox.com/u/2519414/centos6.3-i386-minimal.box"
 		node2_config.vm.host_name = "node2"
 		node2_config.vm.customize ["modifyvm", :id, "--memory", "256"]
 		node2_config.vm.network :hostonly, "192.168.70.3"
@@ -34,7 +34,7 @@ Vagrant::Config.run do |config|
   end
   config.vm.define :node3 do |node3_config|
 		node3_config.vm.box = "centos6.3-i386-minimal"
-		# node3_config.vm.box_url = "http://bit.ly/pxc-tutorial-preloaded-box"
+		node3_config.vm.box_url = "https://dl.dropbox.com/u/2519414/centos6.3-i386-minimal.box"
 		node3_config.vm.host_name = "node3"
 		node3_config.vm.customize ["modifyvm", :id, "--memory", "256"]
 		node3_config.vm.network :hostonly, "192.168.70.4"
