@@ -13,6 +13,7 @@ class percona::server::packages {
 			ensure => "absent";		
 		"Percona-Server-shared-compat":
 			require => [ Yumrepo['percona'], Package['mysql-libs'], Package['MySQL-client'] ],
+			alias => "MySQL-shared-compat",
 			ensure => "installed";
 	}
 }
