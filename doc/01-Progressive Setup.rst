@@ -1,9 +1,3 @@
-Progressive PXC Setup
-=====================
-
-.. contents:: 
-   :backlinks: entry
-   :local:
 
 
 Step 0: baseline the nodes
