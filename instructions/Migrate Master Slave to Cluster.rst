@@ -13,32 +13,28 @@ Check node state
 
 Your install should have all three nodes setup.  Node1 should be the master and nodes 2 and 3 should be slaves.  
 
-*Verify you can connect to all 3 nodes, mysql is running, and the slaves are connected properly*
+**Verify you can connect to all 3 nodes, mysql is running, and the slaves are connected properly**
 
 These servers are configured, but there is no data.  Let's use sysbench to create some test data and run a simulated workload against it on the master::
 
-*Prepare and run a sysbench test on node1*
-
-::
-
-	[root@node1 ~]# sysbench --test=sysbench_tests/db/common.lua --mysql-user=root --mysql-db=test --oltp-table-size=250000 prepare
+	[root@node1 ~]# sysbench --test=sysbench_tests/db/common.lua \
+		--mysql-user=root --mysql-db=test --oltp-table-size=250000 \
+		prepare
 	
-	[root@node1 ~]# sysbench --test=sysbench_tests/db/oltp.lua --mysql-user=root --mysql-db=test --oltp-table-size=250000 --report-interval=1 --max-requests=0 --tx-rate=10 run | grep tps
+	[root@node1 ~]# sysbench --test=sysbench_tests/db/oltp.lua \
+		--mysql-user=root --mysql-db=test --oltp-table-size=250000 \
+		--report-interval=1 --max-requests=0 --tx-rate=10 run | grep tps
 
 
 The sysbench run should output the current transaction rate and response time every second.  
 
-*Verify the sysbench test is running and confirm replication is working to the slaves*
+**Prepare and run a sysbench test on node1, confirm replication is working to the slaves**
 
 
 Update one slave to PXC
 ------------------------
 
-Now that we have a verified working Master/Slave environment with real load, we want to take one of the slaves (we'll start with node3) and convert that to the PXC software.  Each Percona Server package has a PXC equivalent, and PXC is a drop in replacement for Percona server, so we'll simply remove Percona Server and install PXC.
-
-*Remove the Percona Server package and replace it with PXC.  Restart mysql and verify the slave still works properly*
-
-::
+Now that we have a verified working Master/Slave environment with real load, we want to take one of the slaves (we'll start with node3) and convert that to the PXC software.  Each Percona Server package has a PXC equivalent, and PXC is a drop in replacement for Percona server, so we'll simply remove Percona Server and install PXC::
 
 	[root@node3 ~]# service mysql stop
 	[root@node3 ~]# yum remove Percona-Server-server-55 Percona-Server-client-55
@@ -48,13 +44,15 @@ Now that we have a verified working Master/Slave environment with real load, we 
 
 MySQL should startup correctly, and replication should resume from the master.    
 
+**Remove the Percona Server package and replace it with PXC.  Restart mysql and verify the slave still works properly**
+
 
 Configure node3 as a 1 node cluster
 ------------------------------------
 
 At this point node3 is running PXC, but none of the cluster configuration has been done.  Therefore, it is acting simply as a regular MySQL slave.  We will now add Galera configuration to the node to register it as a cluster (of 1).  
 
-*Configure node3 with the appropriate wsrep settings in /etc/my.cnf and restart mysql*
+**Configure node3 with the appropriate wsrep settings in /etc/my.cnf and restart mysql**
 
 Make node3:/etc/my.cnf look like this::
 
@@ -82,7 +80,7 @@ Now restart mysql on node3::
 	
 MySQL should restart correctly and resume replication as before.  However, this time it is also acting as a cluster.
 
-*Verify MySQL restarts correctly and replication resumes*
+**Verify MySQL restarts correctly and replication resumes**
 
 
 Check cluster state
@@ -100,7 +98,7 @@ This tool shows us information about the node state.  Try to determine:
 - Is the cluster "Primary"?
 - Are cluster replication events being generated?
 
-*Run myq_status on node3 and try to answer the above questions before continuing*
+**Run myq_status on node3 and try to answer the above questions before continuing**
 
 You might notice that in spite of replication from node1 flowing into node3, the PXC cluster is not generating any replication events!  
 
@@ -126,13 +124,13 @@ You might notice that in spite of replication from node1 flowing into node3, the
 
 It turns out we have a misconfiguration in our cluster that we need to address.  
 
-*Try to figure out what we might need to add to the my.cnf to allow incoming standard MySQL replication events be replicated to throughout the cluster*
+**Try to figure out what we might need to add to the my.cnf to allow incoming standard MySQL replication events be replicated to throughout the cluster**
 
 We need to configure ``log-slave-updates`` on node3 to treat incoming mysql replication traffic as data that should be written to the cluster.  Add this line to node3's my.cnf and restart mysql::
 
 	log-slave-updates
 
-*Reconfigure node3 and restart replication*
+**Reconfigure node3 and restart replication**
 
 What do you see in ``myq_status`` now?
 
@@ -165,17 +163,17 @@ At this point we're ready to move node2 into the cluster.  Node2 is also a slave
 
 This will prevent node2 from trying to also connect to node1 for replication after it joins the cluster.  Node3 has been designated for that job.  
 
-*Reset the slave on node2*
+**Reset the slave on node2**
 
 Beyond this, we simply repeat the steps we did with node3.
 
-*Replace the Percona Server packages with PXC as we did above on node2.  Don't change the my.cnf yet*
+**Replace the Percona Server packages with PXC as we did above on node2.  Don't change the my.cnf yet**
 
 Because we haven't touched the my.cnf, node2 is running the PXC software, but functioning as a standalone node.  That is, it doesn't know anything about node3 yet.  Check ``myq_status`` again.  How does the output look on a node that is *not* configured with the cluster settings?
 
 Now we need to configure node2 to allow it to join node3 as a cluster node.  For the most part, this is as simple as copying the configuration we came up with on node3.  
 
-*Copy node3's /etc/my.cnf to node2, but do NOT restart mysql yet*
+**Copy node3's /etc/my.cnf to node2, but do NOT restart mysql yet**
 
 We need to make some modifications to a few settings to make this configuration appropriate for node2.  At a glance, can you figure out which settings they are?
 
@@ -186,7 +184,7 @@ We need to change:
 - wsrep_node_address
 - optionally the server-id
 
-*Make the configuration changes to node2's config*
+**Make the configuration changes to node2's config**
 
 Node2's my.cnf should look like this::
 
@@ -216,11 +214,12 @@ wsrep_node_address
 	The IP address we're using for all Galera work.  In our case this is eth1, but it could be your primary eth0 address in a normal environment.
 
 wsrep_cluster_address
-	Dok,escribes how this node needs to connect to the cluster.  Note this contains the ips of all 3 of our nodes.  Eventually we will need to set this on all the nodes, but for now it's sufficient to set it here.  Note that this setting does *not* determine cluster membership.  It simply tells the node where it might find running cluster nodes.  
+	Describes how this node needs to connect to the cluster.  Note this contains the ips of all 3 of our nodes.  Eventually we will need to set this on all the nodes, but for now it's sufficient to set it here.  Note that this setting does *not* determine cluster membership.  It simply tells the node where it might find running cluster nodes.
+
 	Also note that we set this to 'gcomm://' on node3 when we first started the cluster.  This option tells a node it is ok for it to form a new cluster by itself.  If this is not present, then any node trying to restart without finding another already running cluster node will fail.  This process is called *bootstrapping* the cluster.
 
 
-*Do NOT restart mysql on node3 yet*
+**Do NOT restart mysql on node3 yet**
 
 
 Trying to get node2 joined (and failing)
@@ -238,12 +237,12 @@ Now, let's restart mysql on node2 and see what happens.
 - What seems to happen to node3's state?
 - Does node2's mysql start?  Does it keep running?
 
-*Restart mysql on node2 and try to answer the above questions.  MySQL should ultimately fail, but you should be able to repeat the restart a few times so you can see what's going on*
+**Restart mysql on node2 and try to answer the above questions.  MySQL should ultimately fail, but you should be able to repeat the restart a few times so you can see what's going on**
 
-Node2 is not able to join the cluster for some reason.  To figure out why, we need to take a slight tangent and talk about SST.
+Node2 is not able to join the cluster for some reason.  To figure out why, we need to take a slight tangent.
 
 
-A slight tangent to discuss SST
+A tangent to discuss SST
 --------------------------------
 
 When a new node joins a cluster, it receives a state snapshot transfer (SST) from an existing member of the cluster.  In our case, node3 is the only valid node in the cluster, so it will be the *donor* node, and node2 will be our *joiner* node.  
@@ -254,7 +253,7 @@ An SST is actually just a full backup.  In our case, we configured our ``wsrep_s
 
 In our case, this is failing for some reason. If you watched the process list ('px axf') on node3, you might have seen xtrabackup running.  When a donor node runs xtrabackup, a log is generated in /var/lib/mysql/innobackup.backup.log.  We should check here for an indication of what happened. 
 
-*Check the donor node's (node3) xtrabackup SST log file to see if there are any errors*
+**Check the donor node's (node3) xtrabackup SST log file to see if there are any errors**
 
 In this case, the error message is clear::
 
@@ -267,7 +266,7 @@ Xtrabackup requires that the datadir be explicitly set in our my.cnf.  Let's add
 	
 	...
 
-*Add the datadir to the my.cnf file on both node3 and node2*
+**Add the datadir to the my.cnf file on both node3 and node2**
 
 
 Yet more SST errors
@@ -275,14 +274,14 @@ Yet more SST errors
 
 At this point we think we have solved our problem.  
 
-*Restart mysql on node2 again and watch what happens*
+**Restart mysql on node2 again and watch what happens**
 
 - How is this different from the last time?
 - Does the SST succeed?
 
 You may have already guessed from the title of this section, but the SST is likely still failing for you.  
 
-*Use the methods discussed above to attempt to diagnose the problem before reading further*
+**Use the methods discussed above to attempt to diagnose the problem before reading further**
 
 
 If I check the innobackup.backup.log on node3 again, I see this error::
@@ -305,7 +304,7 @@ We need to somehow reset this donor node without disturbing mysql.  The easiest 
 
 	[root@node3 mysql]# kill -9 12929
 
-*Kill the pid of the xtrabackup_55 process and see if that resets node3's state*
+**Kill the pid of the xtrabackup_55 process and see if that resets node3's state**
 
 - What happens to node3 when you kill xtrabackup?
 - What happens to node2?
@@ -325,16 +324,16 @@ And, we need to add an additional Galera configuration to our my.cnf so Galera k
 	wsrep_sst_auth=sst:secret
 	...
 
-*Create an SST user on node3 with the appropriate privileges, add the wsrep_sst_auth setting to your my.cnf files and retry mysql on node2 again*
+**Create an SST user on node3 with the appropriate privileges, add the wsrep_sst_auth setting to your my.cnf files and retry mysql on node2 again**
 
 - Does it work this time?
 - What might have we forgotten?
 
 After we add the ``wsrep_sst_auth`` setting, we need to restart mysql on node3.  
 
-*Reset node3 again and restart mysql so the sst auth setting applies*
+**Reset node3 again and restart mysql so the sst auth setting applies**
 
-*Keep working on debugging node2's SST until it works*
+**Keep working on debugging node2's SST until it works**
 
 
 Success at last
@@ -349,7 +348,7 @@ So, now we have a 2 node cluster.  Check out some things to see what they look l
 - The mysql error logs on both node2 and node3
 - myq_status output on node2 and node3
 
-
+**Go over the status of both nodes and familiarize yourself with how it looks when things succeed**
 
 
 Load balancer?
