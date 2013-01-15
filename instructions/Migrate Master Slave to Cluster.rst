@@ -86,8 +86,36 @@ Make node3:/etc/my.cnf look like this::
 Now restart mysql on node3::
 
 	[root@node3 ~]# service mysql restart
-	
-MySQL should restart correctly and resume replication as before.  However, this time it is also acting as a cluster.
+
+- Does MySQL restart?  
+- What's in the error log?
+- What could be going wrong?
+
+A tangent to discuss SELinux
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+SELinux is a little gremlin that likes to do confusing things to your system.  It's a good policy to check if SELinux is enabled when anything puzzling happens on a system you are working on.  People disagree whether it's wise to disable SELinux or not, but for our purposes here we will disable it.  
+
+Check to see if SELinux is enabled::
+
+	[root@node3 ~]# cat /selinux/enforce
+
+If that returns '1', then it is enabled.  To disable::
+
+	[root@node3 ~]# echo 0 > /selinux/enforce
+
+and change /etc/selinux/config from::
+
+	SELINUX=enforcing
+
+to::
+
+	SELINUX=permissive
+
+
+**DISABLE SELINUX ON ALL YOUR NODES BEFORE GOING FURTHER**
+
+MySQL should now restart correctly and resume replication as before.  However, this time it is also acting as a cluster.
 
 **Verify MySQL restarts correctly and replication resumes**
 
