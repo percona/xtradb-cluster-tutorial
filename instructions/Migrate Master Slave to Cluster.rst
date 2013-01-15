@@ -15,15 +15,24 @@ Your install should have all three nodes setup.  Node1 should be the master and 
 
 **Verify you can connect to all 3 nodes, mysql is running, and the slaves are connected properly**
 
+
+Start up the application
+----------------------------------
+
+First our application needs a user::
+
+	node> GRANT all on test.* to test@'%';
+
 These servers are configured, but there is no data.  Let's use sysbench to create some test data and run a simulated workload against it on the master::
 
 	[root@node1 ~]# sysbench --test=sysbench_tests/db/common.lua \
-		--mysql-user=root --mysql-db=test --oltp-table-size=250000 \
+		--mysql-host=node1 --mysql-user=test --mysql-db=test --oltp-table-size=250000 \
 		prepare
 	
 	[root@node1 ~]# sysbench --test=sysbench_tests/db/oltp.lua \
-		--mysql-user=root --mysql-db=test --oltp-table-size=250000 \
-		--report-interval=1 --max-requests=0 --tx-rate=10 run | grep tps
+		--mysql-host=node1 --mysql-user=test --mysql-db=test \
+		--oltp-table-size=250000 --report-interval=1 --max-requests=0 \
+		--tx-rate=10 run | grep tps
 
 
 The sysbench run should output the current transaction rate and response time every second.  
@@ -350,18 +359,104 @@ So, now we have a 2 node cluster.  Check out some things to see what they look l
 
 **Go over the status of both nodes and familiarize yourself with how it looks when things succeed**
 
-
-Load balancer?
-
-
-Node failures
+Is data from node1 flowing to both nodes in the cluster?
 
 
-Garbd
+Taking stock of what we've achieved
+------------------------------------
+
+So, to take stock of where we are.  We have our existing production database on node1 taking writes from our (simulated) application.  These writes are flowing via standard async MySQL replication from node1 (master) to node3 (slave).  node3 and node2 are linked by the cluster replication.  
+
+At this point in a production migration, we'd likely want to pause and make sure we were ready to migrate.  This might include:
+
+- Verifying the data on our production master matches our new cluster
+- Checking to ensure mysql replication can keep up until we migrate
+- Tuning the cluster
+- QA and testing the cluster
+
+Some of these are more involved than others, but let's do a few.
 
 
-IST
+Doing a consistency check from standalone MySQL to PXC
+------------------------------------------------------------------------
 
-Online schema changes
+For this we will use pt-table-checksum.  Simply run pt-table-checksum on the master::
+
+	node1> pt-table-checksum
+
+**Run pt-table-checksum from node1**
+
+This will output all the tables being checked.  If you setup a mysql user that can connect to all the nodes from the master, it will correctly report differences on the slave(s).  However, let's not trouble with that and just check the results directly on node3::
+
+	node3> SELECT db, tbl, SUM(this_cnt) AS total_rows, COUNT(*) AS chunks
+	    -> FROM percona.checksums
+	    -> WHERE (
+	    ->  master_cnt <> this_cnt
+	    ->  OR master_crc <> this_crc
+	    ->  OR ISNULL(master_crc) <> ISNULL(this_crc))
+	    -> GROUP BY db, tbl;
+	Empty set (0.00 sec)
+
+An empty set here means no diffs.  Look at the raw output of the table to see what it found::
+
+	node3> select * from percona.checksums;
+
+This table contains information about "this" node (node3) and the master (node1).  Scan the checksum (crc) and count (cnt) columns to spot differences.
+
+**Query the percona.checksums table on node3 and look for any differences**
+
+- Do you see any differences?
+- Why might there be differences in the mysql.* tables?
+- Can you account for any other differences?
+- How could you repair differences in there were (or are) any?
+
+**If there are any differences, try to repair them**
 
 
+Checking replication lag to the cluster
+----------------------------------------
+
+Node3 is a slave to node1, and we can certainly check ``SHOW SLAVE STATUS\G`` to see if there are any replication problems.  
+
+**Check SHOW SLAVE STATUS on node3 to see if replication is working**
+
+However, we can't use SHOW SLAVE STATUS to check if there is any lag to the other cluster node: node2.  A more programmatic way to check replication lag is to use pt-heartbeat::
+
+	[root@node1 ~]# pt-heartbeat --update --database percona --create-table
+
+We can check the heartbeat by querying the percona.heartbeat table, or by running the pt-heartbeat command on node2 and node3::
+
+	[root@node2 ~]# pt-heartbeat --monitor --database percona --master-server-id=1
+	0.00s [  0.00s,  0.00s,  0.00s ]
+	0.00s [  0.00s,  0.00s,  0.00s ]
+	0.00s [  0.00s,  0.00s,  0.00s ]
+	0.00s [  0.00s,  0.00s,  0.00s ]
+	0.00s [  0.00s,  0.00s,  0.00s ]
+	0.00s [  0.00s,  0.00s,  0.00s ]
+
+**Run pt-heartbeat on node1 and check the lag on node2 and node3**
+
+Try a few more experiments with the heartbeat::
+
+- Stop the heartbeat tool on node1 and see how that affects the output on node2 and node3
+- Stop replication on node2 (SLAVE STOP) for a while, then restart it.  How long does it take to catch up?
+
+
+Finishing the migration
+-------------------------
+
+Let's suppose we have done all our testing and validation.  How should we migrate our application to the cluster?
+
+Here's some possible steps:
+
+#. Shutdown the application pointing to node1
+#. Shutdown replication from node1 to node3
+#. Startup the application pointing to node3
+#. Rebuild node1 as another member of the cluster
+
+- Do these steps make sense?
+- What else might you want to do?
+- How can you minimize the downtime?
+- Is there any rollback?
+
+*Migrate your application to run against node3.  Minimize downtime. Migrate node1 to the cluster**
