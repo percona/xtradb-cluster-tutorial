@@ -32,8 +32,53 @@ This tutorial uses Virtualbox and Vagrant.  Follow these steps to get setup:
 **NOTE** During the in-class tutorial, using Vagrant will not strictly be required.  
 
 
+Topics covered in this Tutorial
+---------------------------------------
+
+Tutorial steps can be found in the 'instructions' directory.
+
+Migrating a Master / Slave MySQL setup to PXC
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+* Installing PXC software
+* Configuring your first PXC node
+* Replicating into a cluster
+* SST with Xtrabackup and troubleshooting
+* Consistency checking and slave lag measurements
+* Monitoring Galera status
+
+Essential topics
+~~~~~~~~~~~~~~~~~
+* Application interaction with the cluster
+* IST
+* Rolling cluster config changes / software upgrades
+* Monitoring Galera (myq_status, show global status, etc.)
+
+Advanced topics
+~~~~~~~~~~~~~~~~~
+
+* HAProxy and glb
+* Arbitration daemon
+* Online Schema Changes
+* Node failures
+* Garbd
+* Monitoring and Tuning replication
+* Adding nodes without SST (grastate.dat)
+* Cluster Limitations
+
+Crazily advanced topics
+~~~~~~~~~~~~~~~~~
+
+* Two node (or colo) clusters
+* Multi-Network configurations
+* Alternative SST methods?
+* Xtrabackup tuning
+* multicast replication
+* SSL replication
+
+
+
 Creating the Tutorial Environment (Detailed Setup Steps)
--------------
+------------------------------------------------------------------------------
 
 Download and install Virtualbox
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
