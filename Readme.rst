@@ -64,6 +64,7 @@ Advanced topics
 * Monitoring and Tuning replication
 * Adding nodes without SST (grastate.dat)
 * Cluster Limitations
+* Autoincrement control
 
 Crazily advanced topics
 ~~~~~~~~~~~~~~~~~
