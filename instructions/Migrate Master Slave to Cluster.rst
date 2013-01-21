@@ -478,7 +478,7 @@ Let's suppose we have done all our testing and validation.  How should we migrat
 Here's some possible steps:
 
 #. Shutdown the application pointing to node1
-#. Shutdown replication from node1 to node3
+#. Shutdown (and RESET) replication on node3 from node1
 #. Startup the application pointing to node3
 #. Rebuild node1 as another member of the cluster
 
@@ -487,4 +487,4 @@ Here's some possible steps:
 - How can you minimize the downtime?
 - Is there any rollback?
 
-*Migrate your application to run against node3.  Minimize downtime. Migrate node1 to the cluster**
+*Migrate your application to run against node3.  Minimize downtime. Migrate node1 to the cluster*
