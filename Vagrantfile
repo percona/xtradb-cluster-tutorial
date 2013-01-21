@@ -1,1 +1,1 @@
-Vagrantfile.full_cluster
+Vagrantfile.master_slave
