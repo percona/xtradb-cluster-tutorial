@@ -1,7 +1,7 @@
 Essential Topics
 =========================================
 
-This module will cover topics crucial to working with PXC. 
+This module will cover topics crucial to working with PXC.  This section assumes you have completed the 'Migrate Master Slave to Cluster' section.
 
 .. contents:: 
    :backlinks: entry
@@ -44,12 +44,21 @@ Now, let's insert some data into this table::
 
 Now select all the data in the table::
 
-	node2 mysql> select * from test.autoinc;
+	node2 mysql> select * from test.autoinc
+
+**Create the test.autoinc table on node2, insert some rows, and check the data**
 	
 - Does anything strike you as odd about the rows?
 - What happens if you do the inserts on each node in order?
 
-Deadlocks when you didn't expect them
+**Experiment with the inserts and pay special attention to the autoincrement column**
+
+- How would the default autoincrement behavior affect your application?
+
+*Information about how to modify this behavior is later in the tutorial* 
+
+
+Deadlocks when you don't expect them
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 One of the things to be aware of with using PXC is that there can be rollbacks issued by the server on COMMIT (and other unexpected parts of transactions), which cannot happen in standard single-node Innodb.
@@ -57,29 +66,8 @@ One of the things to be aware of with using PXC is that there can be rollbacks i
 To illustrate this, open a mysql session on two nodes and follow these steps carefully::
 
 	node1 mysql> set autocommit=off;
-	Query OK, 0 rows affected (0.00 sec)
-
-	node1 mysql> show variables like 'autocommit';
-	+---------------+-------+
-	| Variable_name | Value |
-	+---------------+-------+
-	| autocommit    | OFF   |
-	+---------------+-------+
-	1 row in set (0.00 sec)
-	
 	node1 mysql> select * from test.autoinc;
-	+---+-------+
-	| i | j     |
-	+---+-------+
-	| 1 | node2 |
-	| 4 | node2 |
-	| 7 | node2 |
-	+---+-------+
-	3 rows in set (0.00 sec)
-
 	node1 mysql> update test.autoinc set j="node1" where i = 1;
-	Query OK, 1 row affected (0.00 sec)
-	Rows matched: 1  Changed: 1  Warnings: 0
 
 **NOTE**: you may need to select another row.  Just be sure you always select a row that exists and has a value that your UPDATE will actually *change*.
 
@@ -97,66 +85,39 @@ We now have an open transaction on node1 with a lock on a single row.  If we run
 	TABLE LOCK table `test`.`autoinc` trx id 83B lock mode IX
 	RECORD LOCKS space id 0 page no 823 n bits 72 index `PRIMARY` of table `test`.`autoinc` trx id 83B lock_mode X locks rec but not gap
 
+**Open a non-autocommit transaction on node1 and update a row in the test.autoinc table, but do not commit**
+
 
 While the transaction is still open, go try to modify the row on another node::
 
 	node3 mysql> set autocommit=off;
-	Query OK, 0 rows affected (0.00 sec)
-
-	node3 mysql> show variables like 'autocommit';
-	+---------------+-------+
-	| Variable_name | Value |
-	+---------------+-------+
-	| autocommit    | OFF   |
-	+---------------+-------+
-	1 row in set (0.00 sec)
-
 	node3 mysql> select * from test.autoinc;
-	+---+-------+
-	| i | j     |
-	+---+-------+
-	| 1 | node2 |
-	| 4 | node2 |
-	| 7 | node2 |
-	+---+-------+
-	3 rows in set (0.00 sec)
-
 	node3 mysql> update test.autoinc set j="node3" where i=1;
-	Query OK, 1 row affected (0.01 sec)
-	Rows matched: 1  Changed: 1  Warnings: 0
-
 	node3 mysql> commit;
-	Query OK, 0 rows affected (0.00 sec)
-	
-	node3 mysql> select * from autoinc;
-	+---+-------+
-	| i | j     |
-	+---+-------+
-	| 1 | node3 |
-	| 4 | node2 |
-	| 7 | node2 |
-	+---+-------+
-	3 rows in set (0.00 sec)
-	
+
+**Do the same thing on node3, but set j to a different value, and commit**
+
+- Does the transaction succeed?
+- What is the value of that record on node3?  Was it set correctly?
+
 This commit succeeded!  On standard Innodb, this should have blocked waiting for the row lock to be released by the first transaction.  Let's go back and see what happens if we try to commit on node1::
 
 	node1 mysql> commit;
-	ERROR 1213 (40001): Deadlock found when trying to get lock; try restarting transaction
 
-	node1 mysql> select * from autoinc;
-	+---+-------+
-	| i | j     |
-	+---+-------+
-	| 1 | node3 |
-	| 4 | node2 |
-	| 7 | node2 |
-	+---+-------+
-	3 rows in set (0.00 sec)
+**Commit on node1**
+
+- What happens on node1?
+- What is the value of j in the row on node1?
 
 We get a deadlock on node1, in spite of it being the first transaction to open a record lock.  
 
-- What has happened here?
-- Retry these steps, but instead of a ``commit`` on node1, try another ``select * from autoinc``.  What is the result?
+- Retry these steps, but instead of a ``commit`` on node1, do another select.  What is the result?
 - Retry these steps, but instead of two separate nodes, execute them in different sessions on the same node.  What is the result?
 - Imagine this is your production environment and you are seeing these deadlocks.  How would you troubleshoot this?
 - Does the deadlock show up in ``SHOW ENGINE INNODB STATUS``?
+
+**Experiment further with this behavior until you understand it**
+
+
+
+
