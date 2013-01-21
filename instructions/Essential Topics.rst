@@ -8,13 +8,209 @@ This module will cover topics crucial to working with PXC.  This section assumes
    :local:
 
 
+Incremental State Transfers
+-----------------------------
+
+We've got a barebones configuration on all 3 of our cluster nodes, and each node (except the first) was synchronized to the cluster via SST -- a full backup of another node.  Luckily, this is not required every time you restart a node, but let's test it out and see how it works.  
+
+What is IST?
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+IST is used to avoid full SST for temporary node outages.  The general idea is that if a node goes down in a known state, misses some replication events, and them comes back online, the cluster should be able to feed those events to that node without requiring a full State Transfer.  
+
+Each node has something called the Gcache, which is temporary local storage of writesets that have been replicated across the cluster.  Provided all the needed replication events can be found in some working node in the cluster, IST can be performed.  
+
+Note that IST uses a completely separate port from SST.  
+
+Checking IST configuration
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The IST configuration is buried in the ``wsrep_provider_options`` MySQL variable::
+
+	node3 mysql> show variables like 'wsrep_provider_options'\G
+	*************************** 1. row ***************************
+	Variable_name: wsrep_provider_options
+	        Value: base_host = 192.168.70.4; base_port = 4567; evs.debug_log_mask = 0x1; \
+		evs.inactive_check_period = PT0.5S; evs.inactive_timeout = PT15S; evs.info_log_mask = 0; \
+		evs.install_timeout = PT15S; evs.join_retrans_period = PT0.3S; evs.keepalive_period = PT1S; \ 
+		evs.max_install_timeouts = 1; evs.send_window = 4; evs.stats_report_period = PT1M; \
+		evs.suspect_timeout = PT5S; evs.use_aggregate = true; evs.user_send_window = 2; evs.version = 0; \
+		evs.view_forget_timeout = PT5M; gcache.dir = /var/lib/mysql/; gcache.keep_pages_size = 0; \
+		gcache.mem_size = 0; gcache.name = /var/lib/mysql//galera.cache; gcache.page_size = 128M; \
+		gcache.size = 128M; gcs.fc_debug = 0; gcs.fc_factor = 0.5; gcs.fc_limit = 16; gcs.fc_master_slave = NO; \
+		gcs.max_packet_size = 64500; gcs.max_throttle = 0.25; gcs.recv_q_hard_limit = 9223372036854775807; \
+		gcs.recv_q_soft_limit = 0.25; gcs.sync_donor = NO; gmcast.listen_addr = tcp://0.0.0.0:4567; \ 
+		gmcast.mcast_addr = ; gmcast.mcast_ttl = 1; gmcast.peer_timeout = PT3S; gmcast.time_wait = PT5S; \ 
+		gmcast.version = 0; ist.recv_addr = 192.168.70.4; pc.checksum = true; pc.ignore_quorum = false; \ 
+		pc.ignore_sb = false; pc.linger = PT2S; pc.npvo = false; pc.version = 0; protonet.backend = asio; \ 
+		protonet.version = 0; replicator.causal_read_timeout = PT30S; replicator.commit_order = 3
+	1 row in set (0.00 sec)
+
+Specifically, look for ``ist.recv_addr``.
+
+
+Testing IST
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Startup sysbench again on node1 (you may still have this running)::
+
+	[root@node1 ~]# sysbench --test=sysbench_tests/db/oltp.lua \
+		--mysql-host=node1 --mysql-user=test --mysql-db=test \
+		--oltp-table-size=250000 --report-interval=1 --max-requests=0 \
+		--tx-rate=10 run | grep tps
+
+Now, we have traffic writing to node1.  
+
+**Startup application traffic on node1**
+
+Go to node3.  Watch the error log, and in another window restart mysql::
+
+	[root@node3 ~]# tail -f /var/lib/mysql/node3.err 
+	[root@node3 ~]# service mysql stop
+
+Also watch ``myq_status`` on the other nodes to see how the cluster behaves.
+
+**Restart node3's mysql and watch the error log*
+
+- What happened to the cluster soon as you issued the restart?
+- Did node3 restart correctly?
+- Did it rejoin without SST?
+
+Scan the error.log on node3 for references to IST.  You should see (amongst a lot of output)::
+
+	120810 19:07:40 [Warning] WSREP: Gap in state sequence. Need state transfer.
+	...
+	120810 19:07:42 [Note] WSREP: Prepared IST receiver, listening at: tcp://192.168.70.4:4568
+	...
+	120810 19:07:43 [Note] WSREP: Receiving IST: 14 writesets, seqnos 1349-1363
+	...
+	120810 19:07:43 [Note] WSREP: 1 (node2): State transfer to 0 (node3) complete.
+
+- What port did IST use on node3?
+- What are the limitations of IST?
+
+
+What happens if IST doesn't work
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Unfortunately it's a bit confusing to setup IST sometimes, and it can get frustrating.  The ``wsrep_node_address`` option makes things a little easier, but before it came along, you had to configure ``ist.recv_addr`` directly in the ``wsrep_provider_options``.  Additionally, in setups with both public and private networks that you want to use for different things, you will have to still set this directly.  
+
+Currently ``ist.recv_addr`` is set to our node's ip.  Let's simulate it being misconfigured by adding this line to our my.cnf on node3::
+
+	[mysqld]
+	...
+	wsrep_provider_options="ist.recv_addr="
+
+Now restart node3 again and make observations.
+
+**Misconfigure node3's IST and restart again**
+
+- What happens?
+- How many times do you need to restart MySQL?
+- What happens before it rejoins the cluster?
+
+Failure to start mysql can trigger a node to require a full SST on the next start.  It's important to be careful about this.
+
+**Remove node3's misconfiguration and restart it again**
+
+
+
+Rolling cluster restarts
+----------------------------------------
+
+Let's spruce up the configuration a bit and take the opportunity to do a rolling restart on the cluster.  
+
+Our cluster configuration should look something like this now on node1::
+
+	[mysqld]
+	datadir=/var/lib/mysql
+
+	server-id=1
+	binlog_format=ROW
+	log-slave-updates
+
+	# galera settings
+	wsrep_provider                  = /usr/lib/libgalera_smm.so
+
+	wsrep_cluster_name              = mycluster
+	wsrep_cluster_address           = gcomm://192.168.70.2,192.168.70.3,192.168.70.4
+	wsrep_node_name                 = node1
+	wsrep_node_address              = 192.168.70.2
+
+	wsrep_sst_method                = xtrabackup
+	wsrep_sst_auth                  = sst:secret
+
+	# innodb settings for galera
+	innodb_locks_unsafe_for_binlog   =  1
+	innodb_autoinc_lock_mode         =  2
+
+
+Let's change the configuration to something like this:
+
+	[mysqld]
+	datadir                         = /var/lib/mysql
+	log_error                       = error.log
+	
+	binlog_format                   = ROW
+	
+	innodb_log_file_size            = 64M
+	
+	wsrep_cluster_name              = mycluster
+	wsrep_cluster_address           = gcomm://192.168.70.2,192.168.70.3,192.168.70.4
+	wsrep_node_name                 = node1
+	wsrep_node_address              = 192.168.70.2
+	
+	wsrep_provider                  = /usr/lib/libgalera_smm.so
+	
+	wsrep_sst_method                = xtrabackup
+	wsrep_sst_auth                  = sst:secret
+	
+	wsrep_slave_threads             = 2
+	
+	innodb_locks_unsafe_for_binlog  = 1
+	innodb_autoinc_lock_mode        = 2
+	
+	[mysql]
+	prompt                          = "node1 mysql> "
+	
+	[client]
+	user                            = root
+
+These are all minor changes, but will make it easier to do more exercises in the tutorial.  
+
+Let's start with node1.  Shutdown mysql there and pay close attention to ``myq_status`` on the other nodes when you do it::
+
+	[root@node1 ~]# service mysql stop
+
+Now edit your my.cnf with the above configuration.
+
+**On node1, shutdown mysql, make your configuration changes, and restart MySQL**
+
+- Did MySQL restart?  If not, check the logs to find out why. (note that we renamed the error log)
+
+Turns out we increased the default innodb_log_file_size, and we forgot to remove the old logs::
+
+	[root@node1 ~]# rm -f /var/lib/mysql/ib_iblog*
+
+**Remove the innodb logs on node1 and try again**
+
+- Does the cluster restart this time?
+
+Now we should be ready to make our config changes on nodes 2 and 3.  Follow the same procedure, but be careful to modify the configuration elements that need to be unique on each host before restarting the node.
+
+**Apply the config changes to each of the other two nodes in turn**
+
+This technique can be used to make non-dynamic cluster configuration changes, and to upgrade PXC to the latest release.  Just do one node at a time.  
+
+- Did any of your nodes SST?
+
+
+
 Application Interaction with the Cluster
 ----------------------------------------
 
 Reading and Writing to the Cluster
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Now that we have a working 3 node cluster, let's experiment with reading and writing to the cluster.  
 
 It is recommended that you run ``myq_status -t 1 wsrep`` on each node in a terminal window (or windows) that you can easy glance at.  This will show you the status of the cluster at a glance.  
 
