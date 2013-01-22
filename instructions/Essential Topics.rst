@@ -425,7 +425,7 @@ Create a copy of our test table with data from the original table::
 	node2 mysql> create table test.foo like test.sbtest1;	
 	node2 mysql> insert into test.foo select * from test.sbtest1;
 
-*Create and populate test.foo using the above commands**
+**Create and populate test.foo using the above commands**
 
 - What effect does this have on the cluster?
 
@@ -433,7 +433,7 @@ Now let's run the ALTER on this new table::
 
 	node2 mysql> alter table test.foo add column `o` varchar(32);
 
-*Alter test.foo*
+**Alter test.foo**
 
 - How long does the alter take?
 - How long is sysbench blocked for?  Why?
