@@ -390,17 +390,17 @@ Online Schema Changes
 
 It's important to know how to make schema changes within the cluster.  Restart the original sysbench on node1::
 
-[root@node1 ~]# sysbench --test=sysbench_tests/db/oltp.lua \
---mysql-host=node1 --mysql-user=test --mysql-db=test \
---oltp-table-size=250000 --report-interval=1 --max-requests=0 \
---tx-rate=10 run | grep tps
+	[root@node1 ~]# sysbench --test=sysbench_tests/db/oltp.lua \
+		--mysql-host=node1 --mysql-user=test --mysql-db=test \
+		--oltp-table-size=250000 --report-interval=1 --max-requests=0 \
+		--tx-rate=10 run | grep tps
 
 **Restart a rate limited sysbench on node1**
 
 Basic Alter Table
 ~~~~~~~~~~~~~~~~~~~~
 
-Now that we have a basic workload running, let's see the effect of altering that table. Note that we will be using the `Total Order Isolation<http://www.codership.com/wiki/doku.php?id=rolling_schema_upgrade#total_order_isolation_toi>`_ default setting for Galera.  
+Now that we have a basic workload running, let's see the effect of altering that table. Note that we will be using the `Total Order Isolation <http://www.codership.com/wiki/doku.php?id=rolling_schema_upgrade#total_order_isolation_toi>`_ default setting for Galera.  
 
 In another window, run an ALTER TABLE on test.sbtest1::
 
@@ -442,7 +442,7 @@ Now let's run the ALTER on this new table::
 Rolling Schema Upgrades
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Galera provides a `Rolling Schema Upgrade <http://www.codership.com/wiki/doku.php?id=rolling_schema_upgrade>`_ setting to allow you to avoid globally locking the cluster on a schema change.  Let's try it out, set this global variable on all three nodes::
+Galera provides a `Rolling Schema Upgrade  <http://www.codership.com/wiki/doku.php?id=rolling_schema_upgrade>`_ setting to allow you to avoid globally locking the cluster on a schema change.  Let's try it out, set this global variable on all three nodes::
 
 	node1 mysql> set global wsrep_OSU_method='RSU';
 	node2 mysql> set global wsrep_OSU_method='RSU';
