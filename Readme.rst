@@ -48,9 +48,9 @@ Migrating a Master / Slave MySQL setup to PXC
 
 Essential topics
 ~~~~~~~~~~~~~~~~~
+* IST
 * Rolling cluster config changes / software upgrades
 * Application interaction with the cluster
-* IST
 * Monitoring Galera (myq_status, show global status, etc.)
 * Online Schema Changes
 

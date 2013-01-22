@@ -70,7 +70,7 @@ Go to node3.  Watch the error log, and in another window restart mysql::
 
 Also watch ``myq_status`` on the other nodes to see how the cluster behaves.
 
-**Restart node3's mysql and watch the error log*
+**Restart node3's mysql and watch the error log**
 
 - What happened to the cluster soon as you issued the restart?
 - Did node3 restart correctly?
@@ -315,5 +315,59 @@ We get a deadlock on node1, in spite of it being the first transaction to open a
 **Experiment further with this behavior until you understand it**
 
 
+Application hotspots
+~~~~~~~~~~~~~~~~~~~~~~
+
+The more your application updates a small subset of your data, the more likely the above conflicts will happen.  
+
+First, let's setup a test so we can see when these deadlocks happen.  There is monitoring available in ``myq_status``` that you can use to see when these deadlocks occur.  They are in the 'Conflct' column, entitled 'lcf' and 'bfa' for "Local Certification failures" and "Brute force aborts", respectively.  For a full description of what those mean, read `this blog post. <http://www.mysqlperformanceblog.com/2012/11/26/realtime-stats-to-pay-attention-to-in-percona-xtradb-cluster-and-galera>`_.
+
+Startup ``myq_status`` on two of your nodes and check those columns.  On the same two nodes, startup sysbench::
+
+	sysbench --test=sysbench_tests/db/oltp.lua \
+	--mysql-user=test --mysql-db=test \
+	--oltp-table-size=250000 --report-interval=1 --max-requests=0 \
+	--tx-rate=10 run | grep tps
+
+*note that I removed the --mysql-host option -- this defaults to the local server**
+
+**Start sysbench on two nodes and monitor with myq_status**
+
+- How many lcf's and bfa's do you see?
+
+It is most likely the case that you don't see any.  This sysbench is doing writes spread out across all 250k rows in a single table.  As these conflicts happen more readily with a smaller working set, simply re-start sysbench with a smaller ``--oltp-table-size``::
+
+	sysbench --test=sysbench_tests/db/oltp.lua \
+	--mysql-user=test --mysql-db=test \
+	--oltp-table-size=25000 --report-interval=1 --max-requests=0 \
+	--tx-rate=10 run | grep tps
+
+*Note: there should be no need to do a sysbench cleanup and prepare*
+
+**Keep decreasing the table size in sysbench until you see some bfas**
+
+- What working set did you need to reduce the test to until you started seeing brute force aborts?
+- What is more common?  BFA or LCF?
+
+If you check the sysbench command line more closely, you'll see a ``--tx-rate`` option.  This is limiting the speed of the sysbench test to 10 transactions per second.  Let's remove that and see how it affects the conflict rate.  Note that this will increase the CPU utilization on your system, so you probably don't want to leave it running very long::
+
+	sysbench --test=sysbench_tests/db/oltp.lua \
+	--mysql-user=test --mysql-db=test \
+	--oltp-table-size=2500 --report-interval=1 --max-requests=0 \
+	run | grep tps
+
+At this point you should be getting bfas regularly.  Keep reducing the table size until you see some lcfs. It may take a while to see an lcf.
+
+You may also need to do the following to get the conditions right to see an lcf:
+
+- set global innodb_flush_log_at_trx_commit=0
+- set global wsrep_slave_threads=1
+
+**Remove the tx-rate option and keep reducing the working set until you see at least one lcf**
+
+- What does it take to get an lcf?
+- Why are lcfs so much less common than bfas (at least in this environment)?
+
+**Do a rolling restart once you are done with this exercise to reset your settings back to the defaults**
 
 
