@@ -371,3 +371,134 @@ You may also need to do the following to get the conditions right to see an lcf:
 **Do a rolling restart once you are done with this exercise to reset your settings back to the defaults**
 
 
+Monitoring Galera
+-------------------
+
+We've already been using ``myq_status`` to check Galera status.  It pulls data from::
+
+	mysql> SHOW GLOBAL VARIABLES LIKE 'wsrep%';
+	mysql> SHOW GLOBAL STATUS LIKE 'wsrep%';
+
+Feel free to use the documentation for these `settings<http://www.codership.com/wiki/doku.php?id=mysql_options_0.8>`_ and `status variables<http://www.codership.com/wiki/doku.php?id=galera_status_0.8>`_.
+
+
+**Run those commands on a node (or nodes) in your cluster and try to see how they line up with myq_status**
+
+
+Online Schema Changes
+-----------------------
+
+It's important to know how to make schema changes within the cluster.  Restart the original sysbench on node1::
+
+[root@node1 ~]# sysbench --test=sysbench_tests/db/oltp.lua \
+--mysql-host=node1 --mysql-user=test --mysql-db=test \
+--oltp-table-size=250000 --report-interval=1 --max-requests=0 \
+--tx-rate=10 run | grep tps
+
+**Restart a rate limited sysbench on node1**
+
+Basic Alter Table
+~~~~~~~~~~~~~~~~~~~~
+
+Now that we have a basic workload running, let's see the effect of altering that table. Note that we will be using the `Total Order Isolation<http://www.codership.com/wiki/doku.php?id=rolling_schema_upgrade#total_order_isolation_toi>`_ default setting for Galera.  
+
+In another window, run an ALTER TABLE on test.sbtest1::
+
+	node1 mysql> alter table test.sbtest1 add column `m` varchar(32);
+
+**Add an extra column to test.sbtest1 on node1**
+
+- How is our application affected by this change? (i.e., What happens to the tps that sysbench is reporting?)
+
+
+Now, let's go to node2 and do a similar operation::
+
+	node2 mysql> alter table test.sbtest1 add column `n` varchar(32);
+
+**Add an extra column to test.sbtest1 on node2**
+
+- Does running the command from another node make a difference?
+
+
+Create a copy of our test table with data from the original table::
+
+	node2 mysql> create table test.foo like test.sbtest1;	
+	node2 mysql> insert into test.foo select * from test.sbtest1;
+
+*Create and populate test.foo using the above commands**
+
+- What effect does this have on the cluster?
+
+Now let's run the ALTER on this new table::
+
+	node2 mysql> alter table test.foo add column `o` varchar(32);
+
+*Alter test.foo*
+
+- How long does the alter take?
+- How long is sysbench blocked for?  Why?
+
+
+Rolling Schema Upgrades
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Galera provides a `Rolling Schema Upgrade <http://www.codership.com/wiki/doku.php?id=rolling_schema_upgrade>`_ setting to allow you to avoid globally locking the cluster on a schema change.  Let's try it out, set this global variable on all three nodes::
+
+	node1 mysql> set global wsrep_OSU_method='RSU';
+	node2 mysql> set global wsrep_OSU_method='RSU';
+	node3 mysql> set global wsrep_OSU_method='RSU';
+
+
+Add another column to ``test.foo`` (the table that sysbench is *not* modifying)::
+
+	node2 mysql> alter table test.foo add column `p` varchar(32);
+
+**Set wsrep_OSU_method to RSU and add another column to test.foo on node2**
+
+- What is the effect on our live workload?
+
+
+Add a column on ``test.sbtest``, but on node2::
+
+	node2 mysql> alter table test.sbtest1 add column `q` varchar(32);
+
+**Add another column to test.sbtest1 on node2**
+
+- What is the effect on our live workload?
+- How do we need to propagate this change around our cluster?  How can we do it without stopping our application?
+
+
+Finally, let's drop a column on ``test.sbtest1`` that sysbench is using (you may want to watch myq_status while you do this)::
+
+	node2 mysql> alter table test.sbtest1 drop column `c`;
+
+**Drop column `c` from test.sbtest1 on node2**
+
+- What happened to node2?
+- How did it affect the application workload?
+- What is the limitation of using the Rolling Schema Upgrade feature?
+
+**Restart mysql on node2 to trigger SST**
+
+
+pt-online-schema-change
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+This is not a tutorial on `pt-online-schema-change <http://www.percona.com/doc/percona-toolkit/pt-online-schema-change.html>`_, but let's illustrate that it works with PXC.
+
+First, set the ``wsrep_OSU_method`` back to TOI (the default) on all nodes::
+
+	node1 mysql> set global wsrep_OSU_method='TOI';
+	node2 mysql> set global wsrep_OSU_method='TOI';
+	node3 mysql> set global wsrep_OSU_method='TOI';
+
+Now, let's do our schema change fully non-blocking::
+
+	[root@node2 ~]# pt-online-schema-change --alter "add column z varchar(32)" D=test,t=sbtest1 --execute
+
+**Run pt-osc from node2**
+
+- Does this work?  If not, why? (hint: check for Conflicts)
+- What can make it work in this case? (`hint<http://www.percona.com/doc/percona-toolkit/2.1/pt-online-schema-change.html#cmdoption-pt-online-schema-change--retries>`_)
+
+**Make necessary adjustments to get the pt-osc completed**
