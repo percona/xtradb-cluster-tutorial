@@ -14,7 +14,7 @@ Vagrant::Config.run do |config|
 			node1_puppet.pp_path = "/tmp/vagrant-puppet"
 			node1_puppet.manifests_path = "manifests"
 			node1_puppet.module_path = "modules"
-			node1_puppet.manifest_file = "site.pp"
+			node1_puppet.manifest_file = "bare_cluster.pp"
 			node1_puppet.options = "--verbose"
 		end
   end
@@ -28,7 +28,7 @@ Vagrant::Config.run do |config|
 			node2_puppet.pp_path = "/tmp/vagrant-puppet"
 			node2_puppet.manifests_path = "manifests"
 			node2_puppet.module_path = "modules"
-			node2_puppet.manifest_file = "site.pp"
+			node2_puppet.manifest_file = "bare_cluster.pp"
 			node2_puppet.options = "--verbose"
 		end
   end
@@ -42,7 +42,7 @@ Vagrant::Config.run do |config|
 			node3_puppet.pp_path = "/tmp/vagrant-puppet"
 			node3_puppet.manifests_path = "manifests"
 			node3_puppet.module_path = "modules"
-			node3_puppet.manifest_file = "site.pp"
+			node3_puppet.manifest_file = "bare_cluster.pp"
 			node3_puppet.options = "--verbose"
 		end
   end
