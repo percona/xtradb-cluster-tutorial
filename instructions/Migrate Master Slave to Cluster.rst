@@ -417,12 +417,12 @@ For this we will use pt-table-checksum.  Simply run pt-table-checksum on the mas
 This will output all the tables being checked.  If you setup a mysql user that can connect to all the nodes from the master, it will correctly report differences on the slave(s).  However, let's not trouble with that and just check the results directly on node3::
 
 	node3> SELECT db, tbl, SUM(this_cnt) AS total_rows, COUNT(*) AS chunks
-	    -> FROM percona.checksums
-	    -> WHERE (
-	    ->  master_cnt <> this_cnt
-	    ->  OR master_crc <> this_crc
-	    ->  OR ISNULL(master_crc) <> ISNULL(this_crc))
-	    -> GROUP BY db, tbl;
+	    FROM percona.checksums
+	    WHERE (
+	    master_cnt <> this_cnt
+	    OR master_crc <> this_crc
+	    OR ISNULL(master_crc) <> ISNULL(this_crc))
+	    GROUP BY db, tbl;
 	Empty set (0.00 sec)
 
 An empty set here means no diffs.  Look at the raw output of the table to see what it found::
