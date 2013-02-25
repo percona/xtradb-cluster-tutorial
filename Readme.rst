@@ -58,11 +58,11 @@ Advanced topics
 ~~~~~~~~~~~~~~~~~
 
 * HAProxy and glb
-* Arbitration daemon
+* Garbd Arbitration daemon
 * Node failures
-* Garbd
 * Monitoring and Tuning replication
 * Adding nodes without SST (grastate.dat)
+
 * Cluster Limitations
 * Autoincrement control
 
