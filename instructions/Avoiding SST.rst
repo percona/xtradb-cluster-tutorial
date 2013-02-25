@@ -138,7 +138,7 @@ Now, stop mysql, check the state of your grastate, try to restart, and check aga
 **Do this experiment to see what happens.  Recover the node grastate using the wsrep_recover position above as before**
 
 * Any issues with --wsrep_start_position?
-* 
+
 
 Node out of sync
 ~~~~~~~~~~~~~~~~~~~
