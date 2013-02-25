@@ -13,7 +13,7 @@ The purpose of this module is to illustrate precisely how a node uses/recovers i
 A refresher on IST
 ------------------
 
-Remember a node can be restarted with out SST if:
+Remember a node can be restarted without SST if:
 
 * The node remembers its state
 * All writesets since that state are contained on the gcache of another node
@@ -39,11 +39,13 @@ After each of the following steps, be sure mysqld is up and running on all nodes
 Manually SSTing a node with Xtrabackup
 ---------------------------------------
 
-It is possible to use an existing Xtrabackup to start a new node without SST IFF the backup is not very old.  Let's simulate that condition by doing an xtrabackup on node3 while it is running::
+It is possible to use an existing Xtrabackup to start a new node without SST IF the backup is not very old.  Let's simulate that condition by doing an xtrabackup on node3 while it is running::
 
 	[root@node3 ~]# mkdir backup
 	[root@node3 ~]# innobackupex --galera-info backup
-	
+
+- What affect does the backup have on sysbench?
+
 This does an xtrabackup and it collects the galera state by taking a FLUSH TABLES WITH READ LOCK.  We can avoid that in certain cases, but we'll cover that in the next section.
 
 Now, stop mysql on node3 and prepare to restart the node with the backup::
@@ -152,3 +154,9 @@ When a node crashes because it out of sync, it also triggers the same situation:
 - What error do you see in node3's log?  What triggered the crash?
 - What happened to the saved state?  Why?  Is this right or wrong?
 - What's the right way to recover if this happened in production?
+
+
+Extra Credit
+--------------
+
+- Build a node from a non-locking Xtrabackup.  How can you instruct Xtrabackup not to take the FTWRL.  How do you extract the Galera GTID?  What are the limitations of this method?
