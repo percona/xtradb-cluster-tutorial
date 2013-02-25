@@ -59,8 +59,8 @@ Advanced topics
 
 * Node failures and Arbitration
 * Load balancing with HAProxy and glb
+* Avoiding SST
 * Monitoring and Tuning replication
-* Adding nodes without SST (grastate.dat)
 * Cluster Limitations
 * Autoincrement control
 
