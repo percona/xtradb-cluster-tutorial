@@ -12,6 +12,7 @@ Pull down a pre-built RPM of GLB from Lefred's website::
 
 	yum localinstall http://lefred.be/files/glb-0.9.2-1.x86_64.rpm
 
+**need an i686 version**
 *Need to pull down pre-built rpms here or build our own.  Wait until closer to conf to decide...*
 
 HAProxy
