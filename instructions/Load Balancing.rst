@@ -8,7 +8,9 @@ Load Balancing
 Galera Load Balancer
 ---------------------
 
-http://www.codership.com/downloads/glb
+Pull down a pre-built RPM of GLB from Lefred's website::
+
+	yum localinstall http://lefred.be/files/glb-0.9.2-1.x86_64.rpm
 
 *Need to pull down pre-built rpms here or build our own.  Wait until closer to conf to decide...*
 
@@ -18,9 +20,9 @@ HAProxy
 Installing HAproxy
 ~~~~~~~~~~~~~~~~~~~
 
-HAproxy used to be available via EPEL, but is being moved into the base repos for the 6.4 release.  Not available on 6.3 for now.
+Haproxy is available in the base Centos 6.4+ repos::
 
-*Fix this before the conf!**
+	yum install haproxy
 
 
 Setting and testing up Clustercheck
@@ -111,48 +113,41 @@ Configuring HAProxy for a rotation of all nodes
 Now that we have working health checks, let's start configuring HAProxy.  For our purposes, we'll only run haproxy on node1.  Let's create a baseline config in /etc/haproxy/haproxy.cfg::
 
 	global
-	        log 127.0.0.1   local0
-	        log 127.0.0.1   local1 notice
-	        maxconn 4096
-	        uid 99
-	        gid 99
-	        daemon
-	        # debug
-	        #quiet
+		log 127.0.0.1   local0
+		log 127.0.0.1   local1 notice
+		maxconn 4096
+		uid 99
+		gid 99
+		daemon
 	
 	defaults
-	        log     global
-	        mode    http
-	        option  tcplog
-	        option  dontlognull
-	        retries 3
-	        option redispatch
-	        maxconn 2000
-	        contimeout      5000
-	        clitimeout      50000
-	        srvtimeout      50000
-	
+		log global
+		mode tcp
+		balance leastconn
+		option  httpchk
+		option  tcplog
+		option  dontlognull
+		retries 3
+		option redispatch 
+		option nolinger
+		maxconn 2000
+		contimeout 5000
+		clitimeout 50000
+		srvtimeout 50000
 
 We're not going to go over the options here, check the `HAProxy docs <http://haproxy.1wt.eu/#docs>`_ for more information.  
 
 Now, let's add a port that will load balance across all our nodes for reads by adding these lines to the end of the file we just created::
 
 	listen cluster-reads 0.0.0.0:5306
-	  mode tcp
-	  balance leastconn
-	  option  httpchk
-
-	  server node1 192.168.70.2:3306 check port 9200 
-	  server node2 192.168.70.3:3306 check port 9200 
-	  server node3 192.168.70.4:3306 check port 9200
-	
+		server node1 192.168.70.2:3306 check port 9200 observe layer4
+		server node2 192.168.70.3:3306 check port 9200 observe layer4
+		server node3 192.168.70.4:3306 check port 9200 observe layer4
 
 This is setting up a port 5306.  It will balance connections to the server with the least number of connections.  It will use HTTP for healthchecking (``httpchk``).  Finally, it will use all three of our nodes as potential targets, and monitor them on port 9200.
 
 Let's startup HAProxy to see if it's working::
 
-	rpm -Uvh http://dl.fedoraproject.org/pub/epel/6/i386/epel-release-6-8.noarch.rpm 
-	yum install haproxy
 	service haproxy start
 
 Try to connect to 5306 (telnet or the mysql client is fine)::
@@ -208,7 +203,7 @@ We seem to have a working HAproxy configuration, but it would be nice to see the
 
 	listen admin_page 0.0.0.0:9999
 		mode http
-	  balance roundrobin
+		balance roundrobin
 		stats uri /
 
 Then restart haproxy and visit `http://192.168.70.2:9999/ <http://192.168.70.2:9999/>`_ in your browser.
@@ -226,13 +221,9 @@ Our reader port is a load-balanced rotation of all nodes.  However, for writes w
 Let's add the following config to the ``haproxy.cfg``::
 
 	listen cluster-writes 0.0.0.0:4306
-	    mode tcp
-	    balance leastconn
-	    option  httpchk
-
-	    server node1 192.168.70.2:3306 check port 9200
-	    server node2 192.168.70.3:3306 check port 9200 backup
-	    server node3 192.168.70.4:3306 check port 9200 backup
+		server node1 192.168.70.2:3306 track cluster-reads/node1
+		server node2 192.168.70.3:3306 track cluster-reads/node2 backup
+		server node3 192.168.70.4:3306 track cluster-reads/node3 backup
 
 This looks very similar to our previous configuration, except for the port number and the presence of the 'backup' flag.  Restart haproxy and test the connection to see what node you reach::
 
