@@ -63,13 +63,13 @@ Advanced topics
 * Monitoring and Tuning replication
 * Cluster Limitations
 * Autoincrement control
+* Other SST methods
+
 
 Crazily advanced topics
 ~~~~~~~~~~~~~~~~~
 
-* Two node (or colo) clusters
 * Multi-Network configurations
-* Alternative SST methods?
 * Xtrabackup tuning
 * multicast replication
 * SSL replication
