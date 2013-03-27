@@ -18,5 +18,9 @@ class percona::cluster::packages {
 			require => [ Yumrepo['percona'], Package['mysql-libs'] ],
 			ensure => "installed";
 
+		"Percona-Server-server-55.$hardwaremodel":
+				ensure => "absent";
+			"Percona-Server-client-55.$hardwaremodel":
+				ensure => "absent";
 	}
 }
