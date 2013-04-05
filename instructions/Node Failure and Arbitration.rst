@@ -67,8 +67,8 @@ Total network failure
 A graceful node mysqld shutdown should behave differently from a node that simply stops responding on the network by dropping all packets on node3 to and from the other nodes::
 
 	[root@node3 ~]# date; iptables -A INPUT -s 192.168.70.2 -j DROP; \
-iptables -A INPUT -s 192.168.70.3 -j DROP; iptables -A OUTPUT -s 192.168.70.2 -j DROP; \
-iptables -A OUTPUT -s 192.168.70.3 -j DROP
+	iptables -A INPUT -s 192.168.70.3 -j DROP; iptables -A OUTPUT -s 192.168.70.2 -j DROP; \
+	iptables -A OUTPUT -s 192.168.70.3 -j DROP
 
 **Block all traffic from the other nodes into node3**
 
