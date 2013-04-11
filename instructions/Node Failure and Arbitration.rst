@@ -76,7 +76,7 @@ A graceful node mysqld shutdown should behave differently from a node that simpl
 - What happens to node3's state?
 - Can you do anything on node3?
 
-Now, restore connectivity:
+Now, restore connectivity::
 
 	[root@node3 ~]# service iptables stop
 	iptables: Flushing firewall rules:                         [  OK  ]
@@ -168,8 +168,8 @@ We have to invoke ``garbd`` from the command line, there are no init scripts yet
 Now that we have 3 nodes, we can simulate node3 going down (network loss to both nodes)::
 
 	[root@node3 ~]# iptables -A INPUT -s 192.168.70.2 -j DROP; \
-iptables -A INPUT -s 192.168.70.3 -j DROP; iptables -A OUTPUT -s 192.168.70.2 -j DROP; \
-iptables -A OUTPUT -s 192.168.70.3 -j DROP
+	iptables -A INPUT -s 192.168.70.3 -j DROP; iptables -A OUTPUT -s 192.168.70.2 -j DROP; \
+	iptables -A OUTPUT -s 192.168.70.3 -j DROP
 
 **Completely isolate node3 from the other two nodes**
 
