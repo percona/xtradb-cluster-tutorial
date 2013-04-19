@@ -1,0 +1,12 @@
+[mysqld]
+
+log-bin
+server-id=<%=serverid %>
+
+innodb_log_file_size            = 64M
+
+[mysql]
+prompt                          = "<%=hostname %> mysql> "
+
+[client]
+user                            = root
