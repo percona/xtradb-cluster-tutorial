@@ -6,7 +6,7 @@ class percona::cluster {
 	include percona::cluster::service    
  
 
-	Class['percona::cluster::remove_server'] -> Class['percona::cluster::packages'] -> Class['percona::cluster::config'] -> Class['percona::cluster::bootstrap'] ->  Class['percona::cluster::service']	
+	Class['percona::cluster::remove_server'] -> Class['percona::cluster::packages'] -> Class['percona::cluster::config'] -> Class['percona::cluster::bootstrap'] ->  Class['percona::cluster::service']
 
 	
 }

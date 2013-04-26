@@ -4,8 +4,7 @@ class percona::cluster::bootstrap ($ensure="running") {
 			command => "/etc/init.d/mysql start --wsrep_cluster_address=gcomm://", 
 			path => "/usr/bin:/usr/sbin:/bin:/sbin",
 			onlyif => [
-				 "test ! -f /var/lib/mysql/grastate.dat",
-				 "test `hostname` = 'node1'"
+				 "test `hostname` = 'node1' && service mysql status || service mysql start || true"
 			 ]
 	}
 	
