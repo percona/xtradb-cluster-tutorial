@@ -27,6 +27,7 @@ This tutorial uses Virtualbox and Vagrant.  Follow these steps to get setup:
 #. `Download and install Vagrant`_: http://vagrantup.com
 #. `Get a copy of this repository`_: ``git clone https://github.com/jayjanssen/percona-xtradb-cluster-tutorial.git``
 #. `vagrant up`_:: ``cd percona-xtradb-cluster-tutorial; vagrant up``
+#. 
 
 
 **NOTE** During the in-class tutorial, using Vagrant will not strictly be required.  
@@ -36,43 +37,6 @@ Topics covered in this Tutorial
 ---------------------------------------
 
 Tutorial steps can be found in the 'instructions' directory.
-
-Migrating a Master / Slave MySQL setup to PXC
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-* Installing PXC software
-* Configuring your first PXC node
-* Replicating into a cluster
-* SST with Xtrabackup and troubleshooting
-* Consistency checking and slave lag measurements
-* Monitoring Galera status
-
-Essential topics
-~~~~~~~~~~~~~~~~~
-* IST
-* Rolling cluster config changes / software upgrades
-* Application interaction with the cluster
-* Monitoring Galera (myq_status, show global status, etc.)
-* Online Schema Changes
-
-Advanced topics
-~~~~~~~~~~~~~~~~~
-
-* Node failures and Arbitration
-* Load balancing with HAProxy and glb
-* Avoiding SST
-* Monitoring and Tuning replication
-* Cluster Limitations
-* Autoincrement control
-* Other SST methods
-
-
-Crazily advanced topics
-~~~~~~~~~~~~~~~~~
-
-* Multi-Network configurations
-* Xtrabackup tuning
-* multicast replication
-* SSL replication
 
 
 
