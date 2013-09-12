@@ -1,56 +1,104 @@
+require './vagrant-percona/lib/vagrant-common.rb'
+
 Vagrant.configure("2") do |config|
-  # All Vagrant configuration is done here. The most common configuration
-  # options are documented and commented below. For a complete reference,
-  # please see the online documentation at vagrantup.com.
+	config.vm.box = "centos-6_4-64_percona"
+	config.ssh.username = "root"
 
-  # Every Vagrant virtual environment requires a box to build off of.
-  config.vm.define :node1 do |node1_config|
-		node1_config.vm.box = "centos6.4-i386-minimal"
-		node1_config.vm.box_url = "https://dl.dropbox.com/u/2519414/centos6.4-i386-minimal.box"
+	config.vm.define :node1 do |node1_config|
+		# Every Vagrant virtual environment requires a box to build off of.
 		node1_config.vm.hostname = "node1"
-		node1_config.vm.provider :virtualbox do |v|
-			v.customize ["modifyvm", :id, "--memory", "256", "--ioapic", "on" ]
-		end
-		node1_config.vm.network :private_network, ip: "192.168.70.2"
-		node1_config.vm.provision :puppet do |node1_puppet|
-			node1_puppet.pp_path = "/tmp/vagrant-puppet"
-			node1_puppet.manifests_path = "manifests"
-			node1_puppet.module_path = "modules"
-			node1_puppet.manifest_file = "master_slave.pp"
-			node1_puppet.options = "--verbose"
-		end
-  end
-	config.vm.define :node2 do |node2_config|
-			node2_config.vm.box = "centos6.4-i386-minimal"
-			node2_config.vm.box_url = "https://dl.dropbox.com/u/2519414/centos6.4-i386-minimal.box"
-			node2_config.vm.hostname = "node2"
-			node2_config.vm.provider :virtualbox do |v|
-			  v.customize ["modifyvm", :id, "--memory", "256", "--ioapic", "on" ]
-			end
-		node2_config.vm.network :private_network, ip: "192.168.70.3"
-			node2_config.vm.provision :puppet do |node2_puppet|
-				node2_puppet.pp_path = "/tmp/vagrant-puppet"
-				node2_puppet.manifests_path = "manifests"
-				node2_puppet.module_path = "modules"
-				node2_puppet.manifest_file = "master_slave.pp"
-				node2_puppet.options = "--verbose"
-			end
-	end
-  config.vm.define :node3 do |node3_config|
-  		node3_config.vm.box = "centos6.4-i386-minimal"
-  		node3_config.vm.box_url = "https://dl.dropbox.com/u/2519414/centos6.4-i386-minimal.box"
-  		node3_config.vm.hostname = "node3"
-  		node3_config.vm.provider :virtualbox do |v|
-  		  v.customize ["modifyvm", :id, "--memory", "256", "--ioapic", "on" ]
-  		end
-			node3_config.vm.network :private_network, ip: "192.168.70.4"
-  		node3_config.vm.provision :puppet do |node3_puppet|
-  			node3_puppet.pp_path = "/tmp/vagrant-puppet"
-  			node3_puppet.manifests_path = "manifests"
-  			node3_puppet.module_path = "modules"
-  			node3_puppet.manifest_file = "master_slave.pp"
-  			node3_puppet.options = "--verbose"
-  		end
-  end
+        node1_config.vm.network :private_network, ip: "192.168.70.2"
 
+		node1_config.vm.provider :aws do |aws, override|
+			aws_provider( aws, override, "Vagrant Node1 Percona Server" )
+
+			# The instance_type and EBS device name seem intertwined
+			aws.instance_type = "m1.small"
+
+			puppet( override, 'standalone.pp', {
+				'datadir_dev' => 'xvdb',
+				'server_id' => 1
+			})
+
+			aws.block_device_mapping = [
+	            {
+	                'DeviceName' => "/dev/sdb",
+	                'VirtualName' => "ephemeral0"
+	            }
+            ]
+		end
+
+		node1_config.vm.provider :virtualbox do |vb, override|
+	        vb.customize ["modifyvm", :id, "--memory", "256", "--ioapic", "on" ]
+
+			puppet( override, 'standalone.pp', {
+				'datadir_dev' => 'dm-2',
+				'server_id' => 1
+			})
+		end	
+	end
+
+	config.vm.define :node2 do |node2_config|
+		# Every Vagrant virtual environment requires a box to build off of.
+		node2_config.vm.hostname = "node2"
+        node2_config.vm.network :private_network, ip: "192.168.70.3"
+
+		node2_config.vm.provider :aws do |aws, override|
+			aws_provider( aws, override, "Vagrant Node2 Percona Server" )
+
+			# The instance_type and EBS device name seem intertwined
+			aws.instance_type = "m1.small"
+			puppet( override, 'standalone.pp', {
+				'datadir_dev' => 'xvdb',
+				'server_id' => 2
+			})
+
+			aws.block_device_mapping = [
+	            {
+	                'DeviceName' => "/dev/sdb",
+	                'VirtualName' => "ephemeral0"
+	            }
+            ]
+		end
+
+		node2_config.vm.provider :virtualbox do |vb, override|
+	        vb.customize ["modifyvm", :id, "--memory", "256", "--ioapic", "on" ]
+			puppet( override, 'standalone.pp', {
+				'datadir_dev' => 'dm-2',
+				'server_id' => 2
+			})
+		end	
+	end
+
+	config.vm.define :node3 do |node3_config|
+		# Every Vagrant virtual environment requires a box to build off of.
+		node3_config.vm.hostname = "node3"
+        node3_config.vm.network :private_network, ip: "192.168.70.4"
+
+		node3_config.vm.provider :aws do |aws, override|
+			aws_provider( aws, override, "Vagrant Node3 Percona Server" )
+
+			# The instance_type and EBS device name seem intertwined
+			aws.instance_type = "m1.small"
+			puppet( override, 'standalone.pp', {
+				'datadir_dev' => 'xvdb',
+				'server_id' => 3
+			})
+
+			aws.block_device_mapping = [
+	            {
+	                'DeviceName' => "/dev/sdb",
+	                'VirtualName' => "ephemeral0"
+	            }
+            ]
+		end
+
+		node3_config.vm.provider :virtualbox do |vb, override|
+	        vb.customize ["modifyvm", :id, "--memory", "256", "--ioapic", "on" ]
+			puppet( override, 'standalone.pp', {
+				'datadir_dev' => 'dm-2',
+				'server_id' => 3
+			})
+		end	
+	end
 end
