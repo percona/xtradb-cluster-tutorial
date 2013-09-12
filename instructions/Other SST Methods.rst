@@ -5,7 +5,6 @@ Other SST Methods
    :backlinks: entry
    :local:
 
-
 rsync
 ------
 

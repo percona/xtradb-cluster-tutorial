@@ -22,11 +22,10 @@ This section covers these topics:
 Build your environment with the Vagrantfile.master_slave and ms-setup.pl scripts::
 
 	ln -sf Vagrantfile.master_slave Vagrantfile
-	vagrant up --provider=<virtualbox|aws>
-	[vagrant provision to 'fix' existing nodes]
+	vagrant up --provider=<virtualbox|aws> # use 'provision' instead of 'up' on subsequent runs
 	./ms-setup.pl
 
-Once this is done follow the instructions in <Migrate Master Slave To Cluster.rst>.
+Once this is done follow the instructions in Migrate Master Slave To Cluster.rst.
 
 
 PXC Topics
@@ -48,6 +47,9 @@ Essential topics
 * Monitoring Galera (myq_status, show global status, etc.)
 * Online Schema Changes
 
+These topics can all be found in the 'Essential Topics.rst' file.  
+
+
 Advanced topics
 ~~~~~~~~~~~~~~~~~
 
@@ -57,14 +59,11 @@ Advanced topics
 * Monitoring and Tuning replication
 * Cluster Limitations
 * Autoincrement control
-* Other SST methods
-
-
-Crazily advanced topics
-~~~~~~~~~~~~~~~~~
-
 * Multi-Network configurations
 * Xtrabackup tuning
 * multicast replication
 * SSL replication
+* Other SST Methods
+
+These topics are separated into separate files in this directory.  Not all of them are written.
 
