@@ -51,7 +51,9 @@ Now that we have a verified working Master/Slave environment with real load, we 
 	[root@node3 ~]# service mysql start
 	[root@node3 ~]# mysql -e "show slave status\G"
 
-MySQL should startup correctly, and replication should resume from the master.    
+MySQL should startup correctly, and replication should resume from the master.   
+
+Note that dependency fights with Yum and RPM are not uncommon here.  
 
 **Remove the Percona Server package and replace it with PXC.  Restart mysql and verify the slave still works properly**
 
@@ -63,14 +65,14 @@ At this point node3 is running PXC, but none of the cluster configuration has be
 
 **Configure node3 with the appropriate wsrep settings in /etc/my.cnf and restart mysql**
 
-Make node3:/etc/my.cnf look like this::
+Make the mysqld section of node3:/etc/my.cnf look like this::
 
 	[mysqld]
 	server-id                       = 3
 	binlog_format                   = ROW
 
 	# galera settings
-	wsrep_provider                  = /usr/lib/libgalera_smm.so
+	wsrep_provider                  = /usr/lib64/libgalera_smm.so
 
 	wsrep_cluster_name              = mycluster
 	wsrep_cluster_address           = gcomm://
@@ -83,6 +85,10 @@ Make node3:/etc/my.cnf look like this::
 	innodb_locks_unsafe_for_binlog  = 1
 	innodb_autoinc_lock_mode        = 2
 
+	# leave existing Innodb settings
+
+Note that the node_address may be different if you are using AWS.  It should be the local ip of the node being used for Galera replication.
+
 Now restart mysql on node3::
 
 	[root@node3 ~]# service mysql restart
@@ -91,34 +97,7 @@ Now restart mysql on node3::
 - What's in the error log?
 - What could be going wrong?
 
-A tangent to discuss SELinux
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-SELinux is a little gremlin that likes to do confusing things to your system.  It's a good policy to check if SELinux is enabled when anything puzzling happens on a system you are working on.  People disagree whether it's wise to disable SELinux or not, but for our purposes here we will disable it.  
-
-Check to see if SELinux is enabled::
-
-	[root@node3 ~]# cat /selinux/enforce
-
-If that returns '1', then it is enabled.  To disable::
-
-	[root@node3 ~]# echo 0 > /selinux/enforce
-
-and change /etc/selinux/config from::
-
-	SELINUX=enforcing
-
-to::
-
-	SELINUX=permissive
-
-
-**DISABLE SELINUX ON ALL YOUR NODES BEFORE GOING FURTHER**
-
-MySQL should now restart correctly and resume replication as before.  However, this time it is also acting as a cluster.
-
-**Verify MySQL restarts correctly and replication resumes**
-
+**Get node3 started, there may be hurdles to overcome**
 
 Check cluster state
 --------------------
@@ -127,7 +106,7 @@ We've configured node3 as our initial cluster node.  What's more is that we will
 
 To check the cluster state, we will use the ``myq_status`` tool.  Execute::
 
-[root@node3 ~]# myq_status -t 1 wsrep
+[root@node3 ~]# myq_status wsrep
 
 This tool shows us information about the node state.  Try to determine:
 
@@ -137,27 +116,22 @@ This tool shows us information about the node state.  Try to determine:
 
 **Run myq_status on node3 and try to answer the above questions before continuing**
 
-You might notice that in spite of replication from node1 flowing into node3, the PXC cluster is not generating any replication events!  
+You might notice that in spite of replication from node1 flowing into node3, the PXC cluster is not generating any replication events (no Ops or Bytes registering as replicating)!  
 
 ::
 
-	[root@node3 ~]# myq_status -t 1 wsrep
-	Wsrep    Cluster        Node           Queue   Ops     Bytes     Flow        Conflct
-	    time  name P cnf  #  name  cmt sta  Up  Dn  Up  Dn   Up   Dn pau snt dst lcf bfa
-	[mysqld]
-	08:49:25 myclu P   1  1 node3 Sync T/T   0   0   0   2    0  125 0.0   0   0   0   0
-	08:49:26 myclu P   1  1 node3 Sync T/T   0   0   0   0    0    0 0.0   0   0   0   0
-	08:49:27 myclu P   1  1 node3 Sync T/T   0   0   0   0    0    0 0.0   0   0   0   0
-	08:49:28 myclu P   1  1 node3 Sync T/T   0   0   0   0    0    0 0.0   0   0   0   0
-	08:49:29 myclu P   1  1 node3 Sync T/T   0   0   0   0    0    0 0.0   0   0   0   0
-	08:49:30 myclu P   1  1 node3 Sync T/T   0   0   0   0    0    0 0.0   0   0   0   0
-	08:49:31 myclu P   1  1 node3 Sync T/T   0   0   0   0    0    0 0.0   0   0   0   0
-	08:49:32 myclu P   1  1 node3 Sync T/T   0   0   0   0    0    0 0.0   0   0   0   0
-	08:49:33 myclu P   1  1 node3 Sync T/T   0   0   0   0    0    0 0.0   0   0   0   0
-	08:49:34 myclu P   1  1 node3 Sync T/T   0   0   0   0    0    0 0.0   0   0   0   0
-	08:49:35 myclu P   1  1 node3 Sync T/T   0   0   0   0    0    0 0.0   0   0   0   0
-	08:49:36 myclu P   1  1 node3 Sync T/T   0   0   0   0    0    0 0.0   0   0   0   0
-	08:49:37 myclu P   1  1 node3 Sync T/T   0   0   0   0    0    0 0.0   0   0   0   0
+	[root@node3 ~]# myq_status wsrep
+	mycluster / node3 / Galera 2.6(r152)
+	Wsrep    Cluster  Node     Queue   Ops     Bytes     Flow    Conflct PApply        Commit
+	    time P cnf  #  cmt sta  Up  Dn  Up  Dn   Up   Dn pau snt lcf bfa dst oooe oool wind
+	13:49:10 P   1  1 Sync T/T   0   0   0   2    0  133 0.0   0   0   0   0    0    0    0
+	13:49:11 P   1  1 Sync T/T   0   0   0   0    0    0 0.0   0   0   0   0    0    0    0
+	13:49:12 P   1  1 Sync T/T   0   0   0   0    0    0 0.0   0   0   0   0    0    0    0
+	13:49:13 P   1  1 Sync T/T   0   0   0   0    0    0 0.0   0   0   0   0    0    0    0
+	13:49:14 P   1  1 Sync T/T   0   0   0   0    0    0 0.0   0   0   0   0    0    0    0
+	13:49:15 P   1  1 Sync T/T   0   0   0   0    0    0 0.0   0   0   0   0    0    0    0
+	13:49:16 P   1  1 Sync T/T   0   0   0   0    0    0 0.0   0   0   0   0    0    0    0
+
 
 It turns out we have a misconfiguration in our cluster that we need to address.  
 
@@ -173,18 +147,17 @@ What do you see in ``myq_status`` now?
 
 ::
 
-	[root@node3 ~]# myq_status -t 1 wsrep
-	Wsrep    Cluster        Node           Queue   Ops     Bytes     Flow        Conflct
-	    time  name P cnf  #  name  cmt sta  Up  Dn  Up  Dn   Up   Dn pau snt dst lcf bfa
-	08:58:03 myclu P   1  1 node3 Sync T/T   0   0  4k  14 6.4M  221 0.0   0  65   0   0
-	08:58:04 myclu P   1  1 node3 Sync T/T   0   0   8   0  12K    0 0.0   0  68   0   0
-	08:58:05 myclu P   1  1 node3 Sync T/T   0   0  12   0  19K    0 0.0   0  72   0   0
-	08:58:06 myclu P   1  1 node3 Sync T/T   0   0   9   0  14K    0 0.0   0  76   0   0
-	08:58:07 myclu P   1  1 node3 Sync T/T   0   0  10   0  16K    0 0.0   0  79   0   0
-	08:58:08 myclu P   1  1 node3 Sync T/T   0   0  15   0  23K    0 0.0   0  85   0   0
-	08:58:09 myclu P   1  1 node3 Sync T/T   0   0   8   0  12K    0 0.0   0  88   0   0
-	08:58:10 myclu P   1  1 node3 Sync T/T   0   0  10   0  16K    0 0.0   0  90   0   0
-	08:58:11 myclu P   1  1 node3 Sync T/T   0   0   9   0  14K    0 0.0   0  95   0   0
+	[root@node3 ~]# myq_status wsrep
+	mycluster / node3 / Galera 2.6(r152)
+	Wsrep    Cluster  Node     Queue   Ops     Bytes     Flow    Conflct PApply        Commit
+	    time P cnf  #  cmt sta  Up  Dn  Up  Dn   Up   Dn pau snt lcf bfa dst oooe oool wind
+	13:49:10 P   1  1 Sync T/T   0   0   0   2    0  133 0.0   0   0   0   0    0    0    0
+	13:49:11 P   1  1 Sync T/T   0   0   0   0    0    0 0.0   0   0   0   0    0    0    0
+	13:49:12 P   1  1 Sync T/T   0   0   0   0    0    0 0.0   0   0   0   0    0    0    0
+	13:49:13 P   1  1 Sync T/T   0   0   0   0    0    0 0.0   0   0   0   0    0    0    0
+	13:49:14 P   1  1 Sync T/T   0   0   0   0    0    0 0.0   0   0   0   0    0    0    0
+	13:49:15 P   1  1 Sync T/T   0   0   0   0    0    0 0.0   0   0   0   0    0    0    0
+	13:49:16 P   1  1 Sync T/T   0   0   0   0    0    0 0.0   0   0   0   0    0    0    0
 
 
 At this point, we can see that we have a 1 node cluster that is 'Primary' ('P') column, and that replication events are being uploaded ('Up') to the cluster, even though there are no other cluster nodes yet.  
@@ -239,6 +212,7 @@ Node2's my.cnf should look like this::
 	wsrep_node_address              = 192.168.70.3
 
 	wsrep_sst_method                =       xtrabackup
+	wsrep_sst_auth		            =       sst:secret
 
 	# innodb settings for galera
 	innodb_locks_unsafe_for_binlog   =  1
@@ -255,6 +229,8 @@ wsrep_cluster_address
 
 	Also note that we set this to 'gcomm://' on node3 when we first started the cluster.  This option tells a node it is ok for it to form a new cluster by itself.  If this is not present, then any node trying to restart without finding another already running cluster node will fail.  This process is called *bootstrapping* the cluster.
 
+wsrep_sst_auth
+	Note we are setting this to use a specific SST user.  If this is not set it defaults to the root user with no password.
 
 **Do NOT restart mysql on node3 yet**
 
@@ -323,30 +299,9 @@ You may have already guessed from the title of this section, but the SST is like
 
 If I check the innobackup.backup.log on node3 again, I see this error::
 
-	130111 09:41:33  innobackupex: Starting to lock all tables...
-	innobackupex: Error: mysql child process has died: ERROR 1044 (42000) at line 3: Access denied for user ''@'localhost' to database 'mysql'
-	 while waiting for reply to MySQL request: 'USE mysql;' at /usr//bin/innobackupex line 378.
+	ERROR: Failed to connect to MySQL server: DBI connect(';mysql_read_default_file=/etc/my.cnf;mysql_read_default_group=xtrabackup;mysql_socket=/var/lib/mysql/mysql.sock','sst',...) failed: Access denied for user 'sst'@'localhost' (using password: YES) at /usr//bin/innobackupex line 1601
 
-Additionally, if I check the output of ``ps axf`` on node3, I see that the parent process of xtrabackup has failed::
 
-	 3971 pts/0    S      0:00 /bin/sh /usr/bin/mysqld_safe --datadir=/var/lib/mysql --pid-file=/var/lib/mysql/node3.pid
-	 4219 pts/0    Sl     1:37  \_ /usr/sbin/mysqld --basedir=/usr --datadir=/var/lib/mysql --plugin-dir=/usr/lib/mysql/plugin --user=my
-	12790 pts/0    S      0:00      \_ /bin/bash -ue /usr//bin/wsrep_sst_xtrabackup --role donor --address 192.168.70.3:4444/xtrabackup_
-	12803 pts/0    S      0:04          \_ nc 192.168.70.3 4444
-	12929 pts/0    Sl     0:00 xtrabackup_55 --defaults-file=/etc/my.cnf --defaults-group=mysqld --backup --suspend-at-end --target-dir=
-
-Notice how ``xtrabackup_55`` is no longer a descendant of ``mysqld``.  If we wait, the SST donation seems to be taking forever, but in reality it is hung.  
-
-We need to somehow reset this donor node without disturbing mysql.  The easiest way to do that is to kill the ``xtrabackup_55`` process::
-
-	[root@node3 mysql]# kill -9 12929
-
-**Kill the pid of the xtrabackup_55 process and see if that resets node3's state**
-
-- What happens to node3 when you kill xtrabackup?
-- What happens to node2?
-
-So, we've successfully reset the states.  But, what do we need to fix before we try again?
 
 Xtrabackup requires `mysql access <http://www.percona.com/doc/percona-xtrabackup/innobackupex/privileges.html#permissions-and-privileges-needed>`_ to take it's backup, but we haven't configured that.
 
@@ -354,14 +309,8 @@ We first need to setup a user on node3::
 
 	node3> GRANT RELOAD, LOCK TABLES, REPLICATION CLIENT ON *.* TO 'sst'@'localhost' IDENTIFIED BY 'secret';
 
-And, we need to add an additional Galera configuration to our my.cnf so Galera knows the username and password to use::
 
-	[mysqld]
-	...
-	wsrep_sst_auth=sst:secret
-	...
-
-**Create an SST user on node3 with the appropriate privileges, add the wsrep_sst_auth setting to your my.cnf files and retry mysql on node2 again**
+**Create an SST user on node3 with the appropriate privileges, ensure the right wsrep_sst_auth setting is in your my.cnf files and retry mysql on node2 again**
 
 - Does it work this time?
 - What might have we forgotten?
@@ -467,7 +416,7 @@ We can check the heartbeat by querying the percona.heartbeat table, or by runnin
 Try a few more experiments with the heartbeat::
 
 - Stop the heartbeat tool on node1 and see how that affects the output on node2 and node3
-- Stop replication on node2 (SLAVE STOP) for a while, then restart it.  How long does it take to catch up?
+- Stop replication on node3 (SLAVE STOP) for a while, then restart it.  How long does it take to catch up?
 
 
 Finishing the migration
