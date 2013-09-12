@@ -1,0 +1,3 @@
+[submodule "vagrant-percona"]
+	path = vagrant-percona
+	url = git@github.com:jayjanssen/vagrant-percona.git
