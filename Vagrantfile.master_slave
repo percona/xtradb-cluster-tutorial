@@ -1,104 +1,61 @@
-require './vagrant-percona/lib/vagrant-common.rb'
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+# Assumes a box from https://github.com/jayjanssen/packer-percona
+
+# This sets up 3 nodes ready for replication, but you need to run ms-setup.pl to connect them.
+
+require './lib/vagrant-common.rb'
+
+# Our puppet config
+puppet_config = {
+	"innodb_log_file_size" => "32M"
+}
+
+# Node names and ips (for local VMs)
+pxc_nodes = {
+	'node1' => '192.168.70.2',
+	'node2' => '192.168.70.3',
+	'node3' => '192.168.70.4',
+}
 
 Vagrant.configure("2") do |config|
 	config.vm.box = "centos-6_4-64_percona"
 	config.ssh.username = "root"
 
-	config.vm.define :node1 do |node1_config|
-		# Every Vagrant virtual environment requires a box to build off of.
-		node1_config.vm.hostname = "node1"
-        node1_config.vm.network :private_network, ip: "192.168.70.2"
+	# Create all three nodes identically except for name and ip
+	pxc_nodes.each_pair { |node, ip|
+		config.vm.define node do |node_config|
+			node_config.vm.hostname = node
+			node_config.vm.network :private_network, ip: ip
 
-		node1_config.vm.provider :aws do |aws, override|
-			aws_provider( aws, override, "Vagrant Node1 Percona Server" )
-
-			# The instance_type and EBS device name seem intertwined
-			aws.instance_type = "m1.small"
-
-			puppet( override, 'standalone.pp', {
-				'datadir_dev' => 'xvdb',
-				'server_id' => 1
+			node_puppet_config = puppet_config.merge({ 
+				:server_id => ip.delete('.').to_i 
 			})
 
-			aws.block_device_mapping = [
-	            {
-	                'DeviceName' => "/dev/sdb",
-	                'VirtualName' => "ephemeral0"
-	            }
-            ]
+			provider_aws( node_config, "PXC #{node}", 'm1.small') { |aws, override|
+				aws.block_device_mapping = [
+					{
+						'DeviceName' => "/dev/sdb",
+						'VirtualName' => "ephemeral0"
+					}
+				]
+				provision_puppet( override, 'standalone.pp', 
+					puppet_config.merge( 'datadir_dev' => 'xvdb' )
+				)
+			}
+
+			provider_virtualbox( node_config, '256' ) { |vb, override|		
+				provision_puppet( override, 'standalone.pp', node_puppet_config, { 
+					'datadir_dev' => 'dm-2' 
+				})
+
+			}
+
 		end
-
-		node1_config.vm.provider :virtualbox do |vb, override|
-	        vb.customize ["modifyvm", :id, "--memory", "256", "--ioapic", "on" ]
-
-			puppet( override, 'standalone.pp', {
-				'datadir_dev' => 'dm-2',
-				'server_id' => 1
-			})
-		end	
-	end
-
-	config.vm.define :node2 do |node2_config|
-		# Every Vagrant virtual environment requires a box to build off of.
-		node2_config.vm.hostname = "node2"
-        node2_config.vm.network :private_network, ip: "192.168.70.3"
-
-		node2_config.vm.provider :aws do |aws, override|
-			aws_provider( aws, override, "Vagrant Node2 Percona Server" )
-
-			# The instance_type and EBS device name seem intertwined
-			aws.instance_type = "m1.small"
-			puppet( override, 'standalone.pp', {
-				'datadir_dev' => 'xvdb',
-				'server_id' => 2
-			})
-
-			aws.block_device_mapping = [
-	            {
-	                'DeviceName' => "/dev/sdb",
-	                'VirtualName' => "ephemeral0"
-	            }
-            ]
-		end
-
-		node2_config.vm.provider :virtualbox do |vb, override|
-	        vb.customize ["modifyvm", :id, "--memory", "256", "--ioapic", "on" ]
-			puppet( override, 'standalone.pp', {
-				'datadir_dev' => 'dm-2',
-				'server_id' => 2
-			})
-		end	
-	end
-
-	config.vm.define :node3 do |node3_config|
-		# Every Vagrant virtual environment requires a box to build off of.
-		node3_config.vm.hostname = "node3"
-        node3_config.vm.network :private_network, ip: "192.168.70.4"
-
-		node3_config.vm.provider :aws do |aws, override|
-			aws_provider( aws, override, "Vagrant Node3 Percona Server" )
-
-			# The instance_type and EBS device name seem intertwined
-			aws.instance_type = "m1.small"
-			puppet( override, 'standalone.pp', {
-				'datadir_dev' => 'xvdb',
-				'server_id' => 3
-			})
-
-			aws.block_device_mapping = [
-	            {
-	                'DeviceName' => "/dev/sdb",
-	                'VirtualName' => "ephemeral0"
-	            }
-            ]
-		end
-
-		node3_config.vm.provider :virtualbox do |vb, override|
-	        vb.customize ["modifyvm", :id, "--memory", "256", "--ioapic", "on" ]
-			puppet( override, 'standalone.pp', {
-				'datadir_dev' => 'dm-2',
-				'server_id' => 3
-			})
-		end	
-	end
+	}
 end
+
+
+
+
