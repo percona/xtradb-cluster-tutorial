@@ -144,6 +144,7 @@ Our cluster configuration should look something like this now on node1::
 	innodb_locks_unsafe_for_binlog   =  1
 	innodb_autoinc_lock_mode         =  2
 
+*Note that if you reprovisioned this with the Vagrantfile.pxc, you may already have an updated configuration.*
 
 Let's change the configuration to something like this::
 
