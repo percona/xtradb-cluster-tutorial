@@ -1,1 +1,1 @@
-Vagrantfile.master_slave
+Vagrantfile.pxc

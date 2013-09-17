@@ -9,7 +9,8 @@ require './lib/vagrant-common.rb'
 
 # Our puppet config
 puppet_config = {
-	"innodb_log_file_size" => "32M"
+	'innodb_buffer_pool_size' => '128M',
+	'innodb_log_file_size' => '64M'
 }
 
 # Node names and ips (for local VMs)
