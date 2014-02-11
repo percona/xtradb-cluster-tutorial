@@ -21,18 +21,14 @@ Start up the application
 
 First our application needs a user::
 
-	node> GRANT all on test.* to test@'%';
-
+	node1> grant all on test.* to test@'localhost' identified by 'test';
+	node1> grant all on test.* to test@'%' identified by 'test';
+	
 These servers are configured, but there is no data.  Let's use sysbench to create some test data and run a simulated workload against it on the master::
 
-	[root@node1 ~]# sysbench --test=sysbench_tests/db/common.lua \
-		--mysql-host=node1 --mysql-user=test --mysql-db=test --oltp-table-size=250000 \
-		prepare
+	[root@node1 ~]# sysbench --db-driver=mysql --test=sysbench_tests/db/common.lua --mysql-host=node1 --mysql-user=test --mysql-db=test --oltp-table-size=250000 prepare
 	
-	[root@node1 ~]# sysbench --test=sysbench_tests/db/oltp.lua \
-		--mysql-host=node1 --mysql-user=test --mysql-db=test \
-		--oltp-table-size=250000 --report-interval=1 --max-requests=0 \
-		--tx-rate=10 run | grep tps
+	[root@node1 ~]# sysbench --db-driver=mysql --test=sysbench_tests/db/oltp.lua --mysql-host=node1 --mysql-user=test --mysql-password=test --mysql-db=test --oltp-table-size=250000 --report-interval=1 --max-requests=0 --tx-rate=10 run | grep tps
 
 
 The sysbench run should output the current transaction rate and response time every second.  
@@ -46,8 +42,8 @@ Update one slave to PXC
 Now that we have a verified working Master/Slave environment with real load, we want to take one of the slaves (we'll start with node3) and convert that to the PXC software.  Each Percona Server package has a PXC equivalent, and PXC is a drop in replacement for Percona server, so we'll simply remove Percona Server and install PXC::
 
 	[root@node3 ~]# service mysql stop
-	[root@node3 ~]# yum remove Percona-Server-server-55 Percona-Server-client-55
-	[root@node3 ~]# yum install Percona-XtraDB-Cluster-server Percona-XtraDB-Cluster-client
+	[root@node3 ~]# yum remove Percona-Server-server-56 Percona-Server-client-56 Percona-Server-shared-56
+	[root@node3 ~]# yum install Percona-XtraDB-Cluster-56
 	[root@node3 ~]# service mysql start
 	[root@node3 ~]# mysql -e "show slave status\G"
 
@@ -75,14 +71,14 @@ Make the mysqld section of node3:/etc/my.cnf look like this::
 	wsrep_provider                  = /usr/lib64/libgalera_smm.so
 
 	wsrep_cluster_name              = mycluster
-	wsrep_cluster_address           = gcomm://
+	wsrep_cluster_address           = gcomm://192.168.70.2,192.168.70.3,192.168.70.4
 	wsrep_node_name                 = node3
 	wsrep_node_address              = 192.168.70.4
 
-	wsrep_sst_method                = xtrabackup
+	wsrep_sst_method                = xtrabackup-v2
+	wsrep_sst_auth		            = sst:secret
 
 	# innodb settings for galera
-	innodb_locks_unsafe_for_binlog  = 1
 	innodb_autoinc_lock_mode        = 2
 
 	# leave existing Innodb settings
@@ -96,6 +92,11 @@ Now restart mysql on node3::
 - Does MySQL restart?  
 - What's in the error log?
 - What could be going wrong?
+
+The first node started in a PXC cluster must be 'bootstrapped'.  The simple way to do this is to use an extension to the init script::
+
+	[root@node3 mysql]# service mysql bootstrap-pxc
+	
 
 **Get node3 started, there may be hurdles to overcome**
 
@@ -121,16 +122,13 @@ You might notice that in spite of replication from node1 flowing into node3, the
 ::
 
 	[root@node3 ~]# myq_status wsrep
-	mycluster / node3 / Galera 2.6(r152)
-	Wsrep    Cluster  Node     Queue   Ops     Bytes     Flow    Conflct PApply        Commit
-	    time P cnf  #  cmt sta  Up  Dn  Up  Dn   Up   Dn pau snt lcf bfa dst oooe oool wind
-	13:49:10 P   1  1 Sync T/T   0   0   0   2    0  133 0.0   0   0   0   0    0    0    0
-	13:49:11 P   1  1 Sync T/T   0   0   0   0    0    0 0.0   0   0   0   0    0    0    0
-	13:49:12 P   1  1 Sync T/T   0   0   0   0    0    0 0.0   0   0   0   0    0    0    0
-	13:49:13 P   1  1 Sync T/T   0   0   0   0    0    0 0.0   0   0   0   0    0    0    0
-	13:49:14 P   1  1 Sync T/T   0   0   0   0    0    0 0.0   0   0   0   0    0    0    0
-	13:49:15 P   1  1 Sync T/T   0   0   0   0    0    0 0.0   0   0   0   0    0    0    0
-	13:49:16 P   1  1 Sync T/T   0   0   0   0    0    0 0.0   0   0   0   0    0    0    0
+	mycluster / node3 / Galera 3.3(r171)
+	Wsrep    Cluster  Node     Queue   Ops     Bytes     Flow      Conflct  PApply        Commit
+	    time P cnf  #  cmt sta  Up  Dn  Up  Dn   Up   Dn  p_ms snt lcf bfa dst oooe oool wind
+	15:29:23 P   1  1 Sync T/T   0   0   0   2    0  124     0   0   0   0   0    0    0    0
+	15:29:24 P   1  1 Sync T/T   0   0   0   0    0    0     0   0   0   0   0    0    0    0
+	15:29:25 P   1  1 Sync T/T   0   0   0   0    0    0     0   0   0   0   0    0    0    0
+	15:29:26 P   1  1 Sync T/T   0   0   0   0    0    0     0   0   0   0   0    0    0    0
 
 
 It turns out we have a misconfiguration in our cluster that we need to address.  
@@ -148,19 +146,18 @@ What do you see in ``myq_status`` now?
 ::
 
 	[root@node3 ~]# myq_status wsrep
-	mycluster / node3 / Galera 2.6(r152)
-	Wsrep    Cluster  Node     Queue   Ops     Bytes     Flow    Conflct PApply        Commit
-	    time P cnf  #  cmt sta  Up  Dn  Up  Dn   Up   Dn pau snt lcf bfa dst oooe oool wind
-	13:49:10 P   1  1 Sync T/T   0   0   0   2    0  133 0.0   0   0   0   0    0    0    0
-	13:49:11 P   1  1 Sync T/T   0   0   0   0    0    0 0.0   0   0   0   0    0    0    0
-	13:49:12 P   1  1 Sync T/T   0   0   0   0    0    0 0.0   0   0   0   0    0    0    0
-	13:49:13 P   1  1 Sync T/T   0   0   0   0    0    0 0.0   0   0   0   0    0    0    0
-	13:49:14 P   1  1 Sync T/T   0   0   0   0    0    0 0.0   0   0   0   0    0    0    0
-	13:49:15 P   1  1 Sync T/T   0   0   0   0    0    0 0.0   0   0   0   0    0    0    0
-	13:49:16 P   1  1 Sync T/T   0   0   0   0    0    0 0.0   0   0   0   0    0    0    0
+	mycluster / node3 / Galera 3.3(r171)
+	Wsrep    Cluster  Node     Queue   Ops     Bytes     Flow      Conflct  PApply        Commit
+	    time P cnf  #  cmt sta  Up  Dn  Up  Dn   Up   Dn  p_ms snt lcf bfa dst oooe oool wind
+	15:30:36 P   1  1 Sync T/T   0   0 426   5 658K  148     0   0   0   0   1    0    0    1
+	15:30:37 P   1  1 Sync T/T   0   0  12   0  18K    0     0   0   0   0   1    0    0    1
+	15:30:38 P   1  1 Sync T/T   0   0   7   0  11K    0     0   0   0   0   1    0    0    1
+	15:30:39 P   1  1 Sync T/T   0   0  17   0  27K    0     0   0   0   0   1    0    0    1
+	15:30:40 P   1  1 Sync T/T   0   0   8   0  12K    0     0   0   0   0   1    0    0    1
 
 
-At this point, we can see that we have a 1 node cluster that is 'Primary' ('P') column, and that replication events are being uploaded ('Up') to the cluster, even though there are no other cluster nodes yet.  
+
+At this point, we can see that we have a 1 node cluster that is 'Primary' ('P') column, and that replication events are being uploaded ('Up') to the cluster, even though there are no other cluster nodes yet.  This indicates that node3 is acting as a relay for async replication into the cluster.
 
 
 Preparing node2 to join the cluster
@@ -168,7 +165,7 @@ Preparing node2 to join the cluster
 
 At this point we're ready to move node2 into the cluster.  Node2 is also a slave of node1, and we first want to disable that replication::
 
-	node2> slave stop;
+	node2> stop slave;
 	node2> reset slave;
 
 This will prevent node2 from trying to also connect to node1 for replication after it joins the cluster.  Node3 has been designated for that job.  
@@ -211,11 +208,10 @@ Node2's my.cnf should look like this::
 	wsrep_node_name                 = node2
 	wsrep_node_address              = 192.168.70.3
 
-	wsrep_sst_method                =       xtrabackup
-	wsrep_sst_auth		            =       sst:secret
+	wsrep_sst_method                = xtrabackup-v2
+	wsrep_sst_auth		            = sst:secret
 
 	# innodb settings for galera
-	innodb_locks_unsafe_for_binlog   =  1
 	innodb_autoinc_lock_mode         =  2
 
 wsrep_node_name
@@ -241,7 +237,7 @@ Trying to get node2 joined (and failing)
 So, it seems we're ready to restart node2.  When we restart mysql there's a lot of things that will happen, and it will be worth having windows open watching some things.  They include:
 
 - myq_status' wsrep report on node3
-- /var/lib/mysql/node*.err on both node3 and node2
+- /var/lib/mysql/error.log on both node3 and node2
 - the output of 'ps axf' on node3 and node2 while node2 is trying to start
 
 Now, let's restart mysql on node2 and see what happens.
@@ -268,39 +264,9 @@ In our case, this is failing for some reason. If you watched the process list ('
 
 **Check the donor node's (node3) xtrabackup SST log file to see if there are any errors**
 
-In this case, the error message is clear::
-
-	xtrabackup: Error: Please set parameter 'datadir'
-
-Xtrabackup requires that the datadir be explicitly set in our my.cnf.  Let's add it::
-
-	[mysqld]
-	datadir=/var/lib/mysql
-	
-	...
-
-**Add the datadir to the my.cnf file on both node3 and node2**
-
-
-Yet more SST errors
---------------------
-
-At this point we think we have solved our problem.  
-
-**Restart mysql on node2 again and watch what happens**
-
-- How is this different from the last time?
-- Does the SST succeed?
-
-You may have already guessed from the title of this section, but the SST is likely still failing for you.  
-
-**Use the methods discussed above to attempt to diagnose the problem before reading further**
-
-
 If I check the innobackup.backup.log on node3 again, I see this error::
 
 	ERROR: Failed to connect to MySQL server: DBI connect(';mysql_read_default_file=/etc/my.cnf;mysql_read_default_group=xtrabackup;mysql_socket=/var/lib/mysql/mysql.sock','sst',...) failed: Access denied for user 'sst'@'localhost' (using password: YES) at /usr//bin/innobackupex line 1601
-
 
 
 Xtrabackup requires `mysql access <http://www.percona.com/doc/percona-xtrabackup/innobackupex/privileges.html#permissions-and-privileges-needed>`_ to take it's backup, but we haven't configured that.
@@ -359,20 +325,13 @@ Doing a consistency check from standalone MySQL to PXC
 
 For this we will use pt-table-checksum.  Simply run pt-table-checksum on the master::
 
-	node1> pt-table-checksum
+	[root@node1 ~]# pt-table-checksum
 
 **Run pt-table-checksum from node1**
 
 This will output all the tables being checked.  If you setup a mysql user that can connect to all the nodes from the master, it will correctly report differences on the slave(s).  However, let's not trouble with that and just check the results directly on node3::
 
-	node3> SELECT db, tbl, SUM(this_cnt) AS total_rows, COUNT(*) AS chunks
-	    FROM percona.checksums
-	    WHERE (
-	    master_cnt <> this_cnt
-	    OR master_crc <> this_crc
-	    OR ISNULL(master_crc) <> ISNULL(this_crc))
-	    GROUP BY db, tbl;
-	Empty set (0.00 sec)
+	node3> SELECT db, tbl, SUM(this_cnt) AS total_rows, COUNT(*) AS chunks FROM percona.checksums WHERE ( master_cnt <> this_cnt OR master_crc <> this_crc OR ISNULL(master_crc) <> ISNULL(this_crc)) GROUP BY db, tbl;
 
 An empty set here means no diffs.  Look at the raw output of the table to see what it found::
 
@@ -403,7 +362,7 @@ However, we can't use SHOW SLAVE STATUS to check if there is any lag to the othe
 
 We can check the heartbeat by querying the percona.heartbeat table, or by running the pt-heartbeat command on node2 and node3::
 
-	[root@node2 ~]# pt-heartbeat --monitor --database percona --master-server-id=1
+	[root@node2 mysql]# pt-heartbeat --monitor --database percona --master-server-id=192168702
 	0.00s [  0.00s,  0.00s,  0.00s ]
 	0.00s [  0.00s,  0.00s,  0.00s ]
 	0.00s [  0.00s,  0.00s,  0.00s ]
@@ -416,7 +375,7 @@ We can check the heartbeat by querying the percona.heartbeat table, or by runnin
 Try a few more experiments with the heartbeat::
 
 - Stop the heartbeat tool on node1 and see how that affects the output on node2 and node3
-- Stop replication on node3 (SLAVE STOP) for a while, then restart it.  How long does it take to catch up?
+- Stop replication on node3 (STOP SLAVE) for a while, then restart it.  How long does it take to catch up?
 
 
 Finishing the migration
