@@ -54,10 +54,7 @@ Testing IST
 
 Startup sysbench again on node1 (you may still have this running)::
 
-	[root@node1 ~]# sysbench --test=sysbench_tests/db/oltp.lua \
-		--mysql-host=node1 --mysql-user=test --mysql-db=test \
-		--oltp-table-size=250000 --report-interval=1 --max-requests=0 \
-		--tx-rate=10 run | grep tps
+	[root@node1 ~]# sysbench --db-driver=mysql --test=sysbench_tests/db/oltp.lua --mysql-host=node1 --mysql-user=test --mysql-password=test --mysql-db=test --oltp-table-size=250000 --report-interval=1 --max-requests=0 --tx-rate=10 run | grep tps
 
 Now, we have traffic writing to node1.  
 
@@ -67,6 +64,8 @@ Go to node3.  Watch the error log, and in another window restart mysql::
 
 	[root@node3 ~]# tail -f /var/lib/mysql/node3.err 
 	[root@node3 ~]# service mysql stop
+	[root@node3 ~]# service mysql start
+	
 
 Also watch ``myq_status`` on the other nodes to see how the cluster behaves.
 
@@ -90,121 +89,38 @@ Scan the error.log on node3 for references to IST.  You should see (amongst a lo
 - What are the limitations of IST?
 
 
-What happens if IST doesn't work
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Checking IST viability
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Unfortunately it's a bit confusing to setup IST sometimes, and it can get frustrating.  The ``wsrep_node_address`` option makes things a little easier, but before it came along, you had to configure ``ist.recv_addr`` directly in the ``wsrep_provider_options``.  Additionally, in setups with both public and private networks that you want to use for different things, you will have to still set this directly.  
+IST viability depends entirely on the donor node.  If the Donor has all the transactions the Joiner needs in its gcache, then IST can happen.  Otherwise, SST is used.  By default the donor selection is random and does not consider what is in the gcache of the donor.  But, in PXC 5.6, we can examine potential donors before we restart a joiner to see if any of them may trigger an SST.
 
-Currently ``ist.recv_addr`` is set to our node's ip.  Let's simulate it being misconfigured by adding this line to our my.cnf on node3::
+To test this, we will stop node2, stop node3, then start node2 and examine node1 and node2 for the viability of being an IST donor for node3::
 
-	[mysqld]
-	...
-	wsrep_provider_options="ist.recv_addr="
+	[root@node2 ~]# service mysql stop
+	[root@node3 ~]# service mysql stop
 
-Now restart node3 again and make observations.
+**Stop node2 and node3***
 
-**Misconfigure node3's IST and restart again**
+Now restart node2 and check the on node1 and node2::
 
-- What happens?
-- How many times do you need to restart MySQL?
-- What happens before it rejoins the cluster?
-
-Failure to start mysql can trigger a node to require a full SST on the next start.  It's important to be careful about this.
-
-**Remove node3's misconfiguration and restart it again**
-
-
-
-Rolling cluster restarts
-----------------------------------------
-
-Let's spruce up the configuration a bit and take the opportunity to do a rolling restart on the cluster.  
-
-Our cluster configuration should look something like this now on node1::
-
-	[mysqld]
-	datadir=/var/lib/mysql
-
-	server-id=1
-	binlog_format=ROW
-	log-slave-updates
-
-	# galera settings
-	wsrep_provider                  = /usr/lib/libgalera_smm.so
-
-	wsrep_cluster_name              = mycluster
-	wsrep_cluster_address           = gcomm://192.168.70.2,192.168.70.3,192.168.70.4
-	wsrep_node_name                 = node1
-	wsrep_node_address              = 192.168.70.2
-
-	wsrep_sst_method                = xtrabackup
-	wsrep_sst_auth                  = sst:secret
-
-	# innodb settings for galera
-	innodb_locks_unsafe_for_binlog   =  1
-	innodb_autoinc_lock_mode         =  2
-
-*Note that if you reprovisioned this with the Vagrantfile.pxc, you may already have an updated configuration.*
-
-Let's change the configuration to something like this::
-
-	[mysqld]
-	datadir                         = /var/lib/mysql
-	log_error                       = error.log
+	[root@node2 ~]# service mysql start
+	node1 mysql> show global status like 'wsrep_local_cached_downto';
+	node2 mysql> show global status like 'wsrep_local_cached_downto';
 	
-	binlog_format                   = ROW
-	
-	innodb_log_file_size            = 64M
-	
-	wsrep_cluster_name              = mycluster
-	wsrep_cluster_address           = gcomm://192.168.70.2,192.168.70.3,192.168.70.4
-	wsrep_node_name                 = node1
-	wsrep_node_address              = 192.168.70.2
-	
-	wsrep_provider                  = /usr/lib/libgalera_smm.so
-	
-	wsrep_sst_method                = xtrabackup
-	wsrep_sst_auth                  = sst:secret
-	
-	wsrep_slave_threads             = 2
-	
-	innodb_locks_unsafe_for_binlog  = 1
-	innodb_autoinc_lock_mode        = 2
-	
-	[mysql]
-	prompt                          = "node1 mysql> "
-	
-	[client]
-	user                            = root
+- Which node has the most data in its gcache?  
+- What happened to the gcache on node2?
 
-These are all minor changes, but will make it easier to do more exercises in the tutorial.  
+Now we compare this information to the last GTID on node3 before we start it up:
 
-Let's start with node1.  Shutdown mysql there and pay close attention to ``myq_status`` on the other nodes when you do it::
+	[root@node3 ~]# cat /var/lib/mysql/grastate.dat
 
-	[root@node1 ~]# service mysql stop
+- Which node(s) are a viable IST donor for node3?
 
-Now edit your my.cnf with the above configuration.
+Node1 is the only viable IST donor.  To avoid SST, explicitly specify node1 as the donor when you restart node3::
 
-**On node1, shutdown mysql, make your configuration changes, and restart MySQL**
+	[root@node3 ~]# service mysql start --wsrep-sst-donor=node1
 
-- Did MySQL restart?  If not, check the logs to find out why. (note that we renamed the error log)
-
-Turns out we increased the default innodb_log_file_size, and we forgot to remove the old logs::
-
-	[root@node1 ~]# rm -f /var/lib/mysql/ib_iblog*
-
-**Remove the innodb logs on node1 and try again**
-
-- Does the cluster restart this time?
-
-Now we should be ready to make our config changes on nodes 2 and 3.  Follow the same procedure, but be careful to modify the configuration elements that need to be unique on each host before restarting the node.
-
-**Apply the config changes to each of the other two nodes in turn**
-
-This technique can be used to make non-dynamic cluster configuration changes, and to upgrade PXC to the latest release.  Just do one node at a time.  
-
-- Did any of your nodes SST?
-
+*Note that not all Linux distributions allow you to pass mysqld options via the 'service' command or directly via the init scripts.  You may need to specify a donor like this in your my.cnf*
 
 
 Application Interaction with the Cluster
