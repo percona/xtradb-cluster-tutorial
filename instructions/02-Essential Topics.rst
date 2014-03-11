@@ -354,12 +354,9 @@ Now let's run the ALTER on this new table::
 Rolling Schema Upgrades
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Galera provides a `Rolling Schema Upgrade  <http://www.codership.com/wiki/doku.php?id=rolling_schema_upgrade>`_ setting to allow you to avoid globally locking the cluster on a schema change.  Let's try it out, set this global variable on all three nodes::
+Galera provides a `Rolling Schema Upgrade  <http://www.codership.com/wiki/doku.php?id=rolling_schema_upgrade>`_ setting to allow you to avoid globally locking the cluster on a schema change.  Let's try it out, set this global variable on the node we will modify::
 
-	node1 mysql> set global wsrep_OSU_method='RSU';
 	node2 mysql> set global wsrep_OSU_method='RSU';
-	node3 mysql> set global wsrep_OSU_method='RSU';
-
 
 Add another column to ``test.foo`` (the table that sysbench is *not* modifying)::
 
@@ -398,11 +395,9 @@ pt-online-schema-change
 
 This is not a tutorial on `pt-online-schema-change <http://www.percona.com/doc/percona-toolkit/pt-online-schema-change.html>`_, but let's illustrate that it works with PXC.
 
-First, set the ``wsrep_OSU_method`` back to TOI (the default) on all nodes::
+First, set the ``wsrep_OSU_method`` back to TOI (the default) on all nodes (it probably already is if node2 had to be restarted)::
 
-	node1 mysql> set global wsrep_OSU_method='TOI';
 	node2 mysql> set global wsrep_OSU_method='TOI';
-	node3 mysql> set global wsrep_OSU_method='TOI';
 
 Now, let's do our schema change fully non-blocking::
 
