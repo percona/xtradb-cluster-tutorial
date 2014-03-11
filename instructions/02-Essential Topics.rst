@@ -178,7 +178,7 @@ One of the things to be aware of with using PXC is that there can be rollbacks i
 
 To illustrate this, open a mysql session on two nodes and follow these steps carefully::
 
-	node1 mysql> set autocommit=off;
+	node1 mysql> begin;
 	node1 mysql> select * from test.autoinc;
 	node1 mysql> update test.autoinc set j="node1" where i = 1;
 
@@ -203,7 +203,7 @@ We now have an open transaction on node1 with a lock on a single row.  If we run
 
 While the transaction is still open, go try to modify the row on another node::
 
-	node3 mysql> set autocommit=off;
+	node3 mysql> begin;
 	node3 mysql> select * from test.autoinc;
 	node3 mysql> update test.autoinc set j="node3" where i=1;
 	node3 mysql> commit;
@@ -241,10 +241,7 @@ First, let's setup a test so we can see when these deadlocks happen.  There is m
 
 Startup ``myq_status`` on two of your nodes and check those columns.  On the same two nodes, startup sysbench::
 
-	sysbench --test=sysbench_tests/db/oltp.lua \
-	--mysql-user=test --mysql-db=test \
-	--oltp-table-size=250000 --report-interval=1 --max-requests=0 \
-	--tx-rate=10 run | grep tps
+	 sysbench --db-driver=mysql --test=sysbench_tests/db/oltp.lua --mysql-user=test --mysql-password=test --mysql-db=test --oltp-table-size=250000 --report-interval=1 --max-requests=0 --tx-rate=10 run | grep tps
 
 *note that I removed the --mysql-host option -- this defaults to the local server**
 
@@ -296,7 +293,7 @@ We've already been using ``myq_status`` to check Galera status.  It pulls data f
 	mysql> SHOW GLOBAL VARIABLES LIKE 'wsrep%';
 	mysql> SHOW GLOBAL STATUS LIKE 'wsrep%';
 
-Feel free to use the documentation for these `settings<http://www.codership.com/wiki/doku.php?id=mysql_options_0.8>`_ and `status variables<http://www.codership.com/wiki/doku.php?id=galera_status_0.8>`_.
+Feel free to use the documentation for these `settings<http://www.percona.com/doc/percona-xtradb-cluster/5.5/wsrep-system-index.html>`_ and `status variables<http://www.percona.com/doc/percona-xtradb-cluster/5.5/wsrep-status-index.html>`_.
 
 
 **Run those commands on a node (or nodes) in your cluster and try to see how they line up with myq_status**
@@ -307,10 +304,8 @@ Online Schema Changes
 
 It's important to know how to make schema changes within the cluster.  Restart the original sysbench on node1::
 
-	[root@node1 ~]# sysbench --test=sysbench_tests/db/oltp.lua \
-		--mysql-host=node1 --mysql-user=test --mysql-db=test \
-		--oltp-table-size=250000 --report-interval=1 --max-requests=0 \
-		--tx-rate=10 run | grep tps
+	[root@node1 ~]# sysbench --db-driver=mysql --test=sysbench_tests/db/oltp.lua --mysql-host=node1 --mysql-user=test --mysql-password=test --mysql-db=test --oltp-table-size=250000 --report-interval=1 --max-requests=0 --tx-rate=10 run | grep tps
+
 
 **Restart a rate limited sysbench on node1**
 

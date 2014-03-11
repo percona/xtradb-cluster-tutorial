@@ -26,7 +26,7 @@ First our application needs a user::
 	
 These servers are configured, but there is no data.  Let's use sysbench to create some test data and run a simulated workload against it on the master::
 
-	[root@node1 ~]# sysbench --db-driver=mysql --test=sysbench_tests/db/common.lua --mysql-host=node1 --mysql-user=test --mysql-db=test --oltp-table-size=250000 prepare
+	[root@node1 ~]# sysbench --test=sysbench_tests/db/common.lua --db-driver=mysql --mysql-user=test --mysql-password=test --mysql-db=test --oltp-table-size=250000 --oltp-auto-inc=off  prepare
 	
 	[root@node1 ~]# sysbench --db-driver=mysql --test=sysbench_tests/db/oltp.lua --mysql-host=node1 --mysql-user=test --mysql-password=test --mysql-db=test --oltp-table-size=250000 --report-interval=1 --max-requests=0 --tx-rate=10 run | grep tps
 
