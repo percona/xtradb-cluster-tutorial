@@ -13,10 +13,7 @@ Setup
 
 We will run our application workload on node1::
 
-	[root@node1 ~]# 	sysbench --test=sysbench_tests/db/oltp.lua \
-	--mysql-host=node1 --mysql-user=test --mysql-db=test \
-	--oltp-table-size=250000 --report-interval=1 --max-requests=0 \
-	--tx-rate=10 run | grep tps
+	[root@node1 ~]# sysbench --db-driver=mysql --test=sysbench_tests/db/oltp.lua --mysql-host=node1 --mysql-user=test --mysql-password=test --mysql-db=test --oltp-table-size=250000 --report-interval=1 --max-requests=0 --tx-rate=10 run | grep tps
 
 Let's use node3 as the node we take in and out of the cluster with some kind of simulated failure.
 
@@ -53,10 +50,7 @@ As an experiment, let's see what happens if node3 only looses connectivity to no
 
 When you are ready to allow node3 to communicate with the other nodes, simply stop the iptables service::
 
-	[root@node3 ~]# service iptables stop
-	iptables: Flushing firewall rules:                         [  OK  ]
-	iptables: Setting chains to policy ACCEPT: filter          [  OK  ]
-	iptables: Unloading modules:                               [  OK  ]
+	[root@node3 ~]# iptables -F
 
 **Make sure to restore communications to and from all nodes before going to the next step!!**
 
@@ -66,9 +60,7 @@ Total network failure
 
 A graceful node mysqld shutdown should behave differently from a node that simply stops responding on the network by dropping all packets on node3 to and from the other nodes::
 
-	[root@node3 ~]# date; iptables -A INPUT -s 192.168.70.2 -j DROP; \
-	iptables -A INPUT -s 192.168.70.3 -j DROP; iptables -A OUTPUT -s 192.168.70.2 -j DROP; \
-	iptables -A OUTPUT -s 192.168.70.3 -j DROP
+	[root@node3 ~]# date; iptables -A INPUT -s 192.168.70.2 -j DROP; iptables -A INPUT -s 192.168.70.3 -j DROP; iptables -A OUTPUT -s 192.168.70.2 -j DROP; iptables -A OUTPUT -s 192.168.70.3 -j DROP
 
 **Block all traffic from the other nodes into node3**
 
@@ -78,10 +70,7 @@ A graceful node mysqld shutdown should behave differently from a node that simpl
 
 Now, restore connectivity::
 
-	[root@node3 ~]# service iptables stop
-	iptables: Flushing firewall rules:                         [  OK  ]
-	iptables: Setting chains to policy ACCEPT: filter          [  OK  ]
-	iptables: Unloading modules:                               [  OK  ]
+	[root@node3 ~]# iptables -F
 
 **Drop iptables again on node3**
 
@@ -104,7 +93,7 @@ Introduction to Garbd
 
 The Galera Arbitration Daemon is meant to be a lightweight daemon that will function as a voting member of a PXC cluster, but without needing to run a full mysqld or store a full state copy of the data.  Do note, however, that all replication traffic for the cluster does pass through garbd.  
 
-``garbd`` can be found in the PXC server package.
+``garbd`` can be found in the PXC galera.  It is unnecessary to install the full server to get garbd.
 
 - Under what circumstances should you run garbd?
 - Where should garbd be placed in your network relative to your other nodes?
@@ -117,22 +106,15 @@ Shut down mysql on node2, leaving node1 and node3 as the sole members of the clu
 
 	[root@node2 ~]# service mysql stop
 
-Now, shutdown node3, leaving only node1::
-
-	[root@node3 ~]# service mysql stop
-	Shutting down MySQL (Percona Server)........ SUCCESS!
-
-**Shutdown node2 and node3**
+**Shutdown node2**
 
 - What happens?
 
-node1 remains up because node3 gracefully exited the cluster.  Bring node3 back up and simulate a network failure between node1 and node3::
+Simulate a network failure between node1 and node3::
 
-	[root@node3 ~]# service mysql start
-	Starting MySQL (Percona Server)..... SUCCESS!
 	[root@node3 ~]# iptables -A INPUT -s 192.168.70.2 -j DROP; iptables -A OUTPUT -s 192.168.70.2 -j DROP; 
 
-**Restart node3 and simulate a network failure there**
+**Simulate a network failure on node3**
 
 - What (eventually) happens?  How long does it take?  Why?
 - What is the status of wsrep on both node1 and node3?
@@ -142,7 +124,7 @@ node1 remains up because node3 gracefully exited the cluster.  Bring node3 back 
 
 You can recover node3 by stopping iptables::
 
-	[root@node3 ~]# service iptables stop
+	[root@node3 ~]# iptables -F
 
 **Drop the iptables rules on node3**
 
@@ -167,9 +149,7 @@ We have to invoke ``garbd`` from the command line, there are no init scripts yet
 
 Now that we have 3 nodes, we can simulate node3 going down (network loss to both nodes)::
 
-	[root@node3 ~]# iptables -A INPUT -s 192.168.70.2 -j DROP; \
-	iptables -A INPUT -s 192.168.70.3 -j DROP; iptables -A OUTPUT -s 192.168.70.2 -j DROP; \
-	iptables -A OUTPUT -s 192.168.70.3 -j DROP
+	[root@node3 ~]# iptables -A INPUT -s 192.168.70.2 -j DROP; iptables -A INPUT -s 192.168.70.3 -j DROP; iptables -A OUTPUT -s 192.168.70.2 -j DROP; iptables -A OUTPUT -s 192.168.70.3 -j DROP
 
 **Completely isolate node3 from the other two nodes**
 
@@ -178,7 +158,7 @@ Now that we have 3 nodes, we can simulate node3 going down (network loss to both
 
 Again, recover node3 by stopping iptables::
 
-	[root@node3 ~]# service iptables stop
+	[root@node3 ~]# iptables -F
 
 **Recover node3**
 
