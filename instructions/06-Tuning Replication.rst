@@ -57,25 +57,6 @@ Wait until flow control kicks in and note the size of the local receive queue.  
 - At what point does flow control check in?  How does the application perform up to that point?
 - Unlock the tables and watch the flow control messages.  When does flow control turn off?
 
-Change the ``gcs.fc_factor`` setting.  It defaults to 1.0 (the max), but can be set anywhere between 0.0 and 1.0::
-
-node3 mysql> set global wsrep_provider_options="gcs.fc_factor=0.5";
-
-Now, re-lock the tables and wait until flow control kicks in.  Release the table locks and observe at what point flow control turns off.
-
-- How does flow control change with a smaller fc_factor?
-- When might this be useful?
-- Try fc_factor=0.0.  When might this be useful?
-
-**Set fc_factor=1.0 before continuing**
-
-The other setting relevant to tuning flow control is 'fc_master_slave', which is not a dynamic variable.  Add this to the my.cnf on node3 and restart mysql::
-
-	wsrep_provider_options          = "gcs.fc_master_slave=YES"
-
-- How big does node3's replication queue have to get before flow control kicks in now?
-
-
 
 Multiple Applier Threads
 --------------------------
@@ -109,4 +90,46 @@ The select should work normally, but now take the read lock in another terminal 
 
 - What does the select do while the queue is blocked?
 - What does the same query do with wsrep_causal_reads turned off when the queue is full?
+
+
+
+
+
+Taking backups
+---------------
+
+Backups commonly use FLUSH TABLES WITH READ LOCK, but as we see above, this can cause flow control on the cluster.  We need a way to backup a node without causing flow control.  
+
+The safe way to take a backup on a PXC node is to manually put the node into the Donor/Desync state::
+
+	node3 mysql> set global wsrep_desync=ON;
+
+You should see myq_status report the node in the 'Dono' or 'Donor/Desynced' state. 
+
+	node3 mysql> FLUSH TABLES WITH READ LOCK;
+
+NOW if you run the backup, you may still see a brief period where the FTWRL is locking node3, but a node in the Desync state will NOT send flow control to the cluster if it gets lagged.  
+
+ It will remain in this state until wsrep_desync is turned off::
+
+	node3 mysql> set global wsrep_desync=OFF;
+ 
+
+Measuring maximum replication throughput
+---------------------------------------------
+
+We can also use the wsrep_desync trick to measure how fast a given node can apply transactions.  If we desync the node, lock tables and let the recv queue build up on the node, and then suddenly release it, we can see the highest apply rate the node can handle::
+
+	node3 mysql> set global wsrep_desync=ON;
+	node3 mysql> flush tables with read lock;
+	
+
+Now we let replication fall way behind.  Once the recv queue ('Queue Dn' in myq_status) is sufficiently high, release the lock and watch the 'Ops Dn' column to see how high the apply rate gets::
+
+	node3 mysql> unlock tables;
+
+This is a measurement of how fast a given node can apply (at least in a burst).  This number compared with the current apply rate can start to give you some impression of how much throughput your cluster can sustain.
+
+	node3 mysql> set global wsrep_desync=OFF;
+
 
