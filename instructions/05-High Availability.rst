@@ -1,19 +1,9 @@
-Load Balancing
+Application to Cluster High Availablity 
 ======================
 
 .. contents:: 
    :backlinks: entry
    :local:
-
-Galera Load Balancer
----------------------
-
-Pull down a pre-built RPM of GLB from Lefred's website::
-
-	yum localinstall http://lefred.be/files/glb-0.9.2-1.x86_64.rpm
-
-**need an i686 version**
-*Need to pull down pre-built rpms here or build our own.  Wait until closer to conf to decide...*
 
 HAProxy
 ----------
@@ -48,14 +38,6 @@ This says our node is down, but is it?  Clustercheck is a shell script, look at 
 After you fix it, it should start working::
 
 	[root@node1 ~]# clustercheck
-	HTTP/1.1 200 OK
-	Content-Type: text/plain
-
-	Percona XtraDB Cluster Node is synced.
-
-Note that we are going to run this as ``nobody``, so let's make sure that user can run it too::
-
-	[root@node1 ~]# su nobody -s /bin/bash -c clustercheck
 	HTTP/1.1 200 OK
 	Content-Type: text/plain
 
@@ -141,9 +123,9 @@ We're not going to go over the options here, check the `HAProxy docs <http://hap
 Now, let's add a port that will load balance across all our nodes for reads by adding these lines to the end of the file we just created::
 
 	listen cluster-reads 0.0.0.0:5306
-		server node1 192.168.70.2:3306 check port 9200 observe layer4
-		server node2 192.168.70.3:3306 check port 9200 observe layer4
-		server node3 192.168.70.4:3306 check port 9200 observe layer4
+		server node1 192.168.70.2:3306 check port 9200 
+		server node2 192.168.70.3:3306 check port 9200 
+		server node3 192.168.70.4:3306 check port 9200 
 
 This is setting up a port 5306.  It will balance connections to the server with the least number of connections.  It will use HTTP for healthchecking (``httpchk``).  Finally, it will use all three of our nodes as potential targets, and monitor them on port 9200.
 
@@ -151,41 +133,10 @@ Let's startup HAProxy to see if it's working::
 
 	service haproxy start
 
-Try to connect to 5306 (telnet or the mysql client is fine)::
-
-	[root@node1 haproxy]# telnet 127.0.0.1 5306
-	Trying 127.0.0.1...
-	Connected to 127.0.0.1.
-	Escape character is '^]'.
-	J
-	5.5.24?]64A+P2?WZ?k|PZTsf(3mysql_native_password
-
-If you see a MySQL version, HAProxy is working!
-
-Let's setup a MySQL user so we can connect as a normal client::
-
-	node1 mysql> grant all on test.* to test@'%';
-
-Now connect to mysql directly::
-
-	[root@node1 ~]# mysql -u test -h 192.168.70.2
-	Welcome to the MySQL monitor.  Commands end with ; or \g.
-	Your MySQL connection id is 7615
-	Server version: 5.5.24 Percona XtraDB Cluster (GPL), wsrep_23.6.r340
-
-	Copyright (c) 2000, 2011, Oracle and/or its affiliates. All rights reserved.
-
-	Oracle is a registered trademark of Oracle Corporation and/or its
-	affiliates. Other names may be trademarks of their respective
-	owners.
-
-	Type 'help;' or '\h' for help. Type '\c' to clear the current input statement.
-
-	node1 mysql>
 
 Now connect through our HAProxy port (5306) and query the ``wsrep_node_name`` to see what node we are connected to::
 
-	[root@node1 ~]# mysql -u test -h 192.168.70.2 -P 5306 -e "show variables like 'wsrep_node_name';"
+	[root@node1 ~]# mysql -u test -ptest -h 192.168.70.2 -P 5306 -e "show variables like 'wsrep_node_name';"
 	+-----------------+-------+
 	| Variable_name   | Value |
 	+-----------------+-------+
@@ -195,23 +146,6 @@ Now connect through our HAProxy port (5306) and query the ``wsrep_node_name`` to
 - What happens when you reconnect?
 - How would you configure your application clients to use this load balanced rotation?
 - How would you have to setup GRANTs for application users in this case?
-
-
-Using the HAProxy admin page
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-We seem to have a working HAproxy configuration, but it would be nice to see the status of the nodes.  Add the following config to your ``haproxy.cfg``::
-
-	listen admin_page 0.0.0.0:9999
-		mode http
-		balance roundrobin
-		stats uri /
-
-Then restart haproxy and visit `http://192.168.70.2:9999/ <http://192.168.70.2:9999/>`_ in your browser.
-
-- What do you see?
-- Make a connection through the HAProxy port, does it show up in the interface?
-- Shutdown mysqld on one of your nodes, what is the effect in the interface?
 
 
 Configuring HAProxy for a writer port
@@ -235,3 +169,47 @@ This looks very similar to our previous configuration, except for the port numbe
 - What happens to connections already on node2 if node1 recovers?  Is there any way to fix this?
 
 
+Keepalived
+~~~~~~~~~~~
+
+If you don't need load balancing, and just want your application to use a single node in the cluster with failover, then keepalived is a nice solution.  Install keepalived like this on all the nodes::
+
+	yum install keepalived
+
+Now edit the /etc/keepalived/keepalived.conf file and add this::
+
+	vrrp_script chk_pxc {
+	        script "/usr/bin/clustercheck"
+	        interval 1
+	}
+	vrrp_instance PXC {
+	    state MASTER
+	    interface eth1
+	    virtual_router_id 51
+	    priority 100
+	    nopreempt
+	    virtual_ipaddress {
+	        192.168.70.100
+	    }
+	    track_script {
+	        chk_pxc
+	    }
+	    notify_master "/bin/echo 'now master' > /tmp/keepalived.state"
+	    notify_backup "/bin/echo 'now backup' > /tmp/keepalived.state"
+	    notify_fault "/bin/echo 'now fault' > /tmp/keepalived.state"
+	}
+
+Now start keepalived on all the nodes::
+
+	service keepalived start
+	
+And check for which host has the VIP::
+
+	ip addr list | grep 192.168.70.100
+	
+Verify that we can connect to MySQL through the vip::
+
+	[root@node1 ~]# while( true; ) do mysql -u test -ptest -h 192.168.70.100 -e "show variables like 'wsrep_node_name'";  sleep 1; done
+
+And experiment with shutting down the node that has the vip and watching connections transition to a new node in the cluster.
+	
