@@ -75,11 +75,12 @@ Make the mysqld section of node3:/etc/my.cnf look like this::
 	wsrep_node_name                 = node3
 	wsrep_node_address              = 192.168.70.4
 
-	wsrep_sst_method                = xtrabackup-v2
+	wsrep_sst_method                = xtrabackup
 	wsrep_sst_auth		            = sst:secret
 
 	# innodb settings for galera
 	innodb_autoinc_lock_mode        = 2
+	innodb_locks_unsafe_for_binlog  = ON
 
 	# leave existing Innodb settings
 
@@ -208,11 +209,13 @@ Node2's my.cnf should look like this::
 	wsrep_node_name                 = node2
 	wsrep_node_address              = 192.168.70.3
 
-	wsrep_sst_method                = xtrabackup-v2
+	wsrep_sst_method                = xtrabackup
 	wsrep_sst_auth		            = sst:secret
 
 	# innodb settings for galera
 	innodb_autoinc_lock_mode         =  2
+	innodb_locks_unsafe_for_binlog  = ON
+	
 
 wsrep_node_name
 	By convention, simply the short hostname of the node.  This just needs to be unique across all nodes in the cluster.
