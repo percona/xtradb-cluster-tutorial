@@ -3,24 +3,15 @@
 
 # Assumes a box from https://github.com/jayjanssen/packer-percona
 
-# This sets up 3 nodes with a common PXC, but you need to run bootstrap.sh to connect them.
-
+# This sets up 3 nodes for replication.  Run 'ms-setup.pl' after these are provisioned.
 require './lib/vagrant-common.rb'
 
 # Our puppet config
-puppet_config = {
+$puppet_config = {
 	'percona_server_version' => '56',
 	'innodb_buffer_pool_size' => '128M',
 	'innodb_log_file_size' => '64M',
-	'innodb_flush_log_at_trx_commit' => '0',
-  'wsrep_slave_threads' => '1',
-}
-
-# Node names and ips (for local VMs)
-pxc_nodes = {
-	'node1' => '192.168.70.2',
-	'node2' => '192.168.70.3',
-	'node3' => '192.168.70.4',
+	'innodb_flush_log_at_trx_commit' => '0'
 }
 
 def build_box( config, name, ip, server_id )
@@ -53,11 +44,11 @@ def build_box( config, name, ip, server_id )
 			provision_puppet( override, 'pxc.pp', 
 				node_puppet_config.merge('datadir_dev' => 'dm-2')
 			)
+
 		}
+
 	end
 end
-
-
 
 Vagrant.configure("2") do |config|
 	config.vm.box = "perconajayj/centos-x86_64"
@@ -65,8 +56,10 @@ Vagrant.configure("2") do |config|
 
 	build_box( config, 'node1', '192.168.70.2', 1 )
 	build_box( config, 'node2', '192.168.70.3', 2 )
-	build_box( config, 'node3', '192.168.70.3', 3 )
+	build_box( config, 'node3', '192.168.70.4', 3 )
 end
+
+
 
 
 
