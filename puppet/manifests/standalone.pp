@@ -9,8 +9,12 @@ include misc::mysql_datadir
 include misc::sysbench
 include misc::local_percona_repo
 
+Class['percona::repository'] -> Class['misc::local_percona_repo']
 Class['misc::local_percona_repo'] -> Class['misc']
-Class['misc::local_percona_repo'] -> Class['percona::repository']
+
+Class['misc'] -> Class['percona::server']
+Class['misc'] -> Class['percona::toolkit']
+
 
 Class['misc::mysql_datadir'] -> Class['percona::server']
 
