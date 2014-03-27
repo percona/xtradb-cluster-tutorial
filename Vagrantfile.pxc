@@ -24,7 +24,7 @@ pxc_nodes = {
 }
 
 Vagrant.configure("2") do |config|
-	config.vm.box = "centos-6_4-64_percona"
+	config.vm.box = "perconajayj/centos-x86_64-local_repo"
 	config.ssh.username = "root"
 
 	# Create all three nodes identically except for name and ip

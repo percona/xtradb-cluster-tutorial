@@ -3,61 +3,57 @@
 
 # Assumes a box from https://github.com/jayjanssen/packer-percona
 
-# This sets up 3 nodes ready for replication, but you need to run ms-setup.pl to connect them.
-
+# This sets up 3 nodes for replication.  Run 'ms-setup.pl' after these are provisioned.
 require './lib/vagrant-common.rb'
 
 # Our puppet config
-puppet_config = {
+$puppet_config = {
 	'percona_server_version' => '56',
 	'innodb_buffer_pool_size' => '128M',
 	'innodb_log_file_size' => '64M',
-	'innodb_flush_log_at_trx_commit' => '0',
+	'innodb_flush_log_at_trx_commit' => '0'
 }
 
-# Node names and ips (for local VMs)
-pxc_nodes = {
-	'node1' => '192.168.70.2',
-	'node2' => '192.168.70.3',
-	'node3' => '192.168.70.4',
-}
+def build_box( config, name, ip, server_id )
+	config.vm.define name do |node_config|
+		node_config.vm.hostname = name
+		node_config.vm.network :private_network, ip: ip
+
+		node_puppet_config = $puppet_config.merge({
+			:server_id => server_id
+		})
+
+		provider_aws( node_config, name, 'm1.small') { |aws, override|
+			aws.block_device_mapping = [
+				{
+					'DeviceName' => "/dev/sdb",
+					'VirtualName' => "ephemeral0"
+				}
+			]
+			provision_puppet( override, 'standalone.pp', 
+				node_puppet_config.merge( 'datadir_dev' => 'xvdb' )
+			)
+		}
+
+		provider_virtualbox( node_config, '256' ) { |vb, override|		
+			provision_puppet( override, 'standalone.pp', 
+				node_puppet_config.merge('datadir_dev' => 'dm-2')
+			)
+
+		}
+
+	end
+end
 
 Vagrant.configure("2") do |config|
-	config.vm.box = "centos-6_4-64_percona"
+	config.vm.box = "perconajayj/centos-x86_64-local_repo"
 	config.ssh.username = "root"
 
-	# Create all three nodes identically except for name and ip
-	pxc_nodes.each_pair { |node, ip|
-		config.vm.define node do |node_config|
-			node_config.vm.hostname = node
-			node_config.vm.network :private_network, ip: ip
-
-			node_puppet_config = puppet_config.merge({ 
-				:server_id => ip.delete('.').to_i 
-			})
-
-			provider_aws( node_config, "PXC #{node}", 'm1.small') { |aws, override|
-				aws.block_device_mapping = [
-					{
-						'DeviceName' => "/dev/sdb",
-						'VirtualName' => "ephemeral0"
-					}
-				]
-				provision_puppet( override, 'standalone.pp', 
-					puppet_config.merge( 'datadir_dev' => 'xvdb' )
-				)
-			}
-
-			provider_virtualbox( node_config, '256' ) { |vb, override|		
-				provision_puppet( override, 'standalone.pp', node_puppet_config, { 
-					'datadir_dev' => 'dm-2' 
-				})
-
-			}
-
-		end
-	}
+	build_box( config, 'node1', '192.168.70.2', '1' )
+	build_box( config, 'node2', '192.168.70.3', '2' )
+	build_box( config, 'node3', '192.168.70.3', '3' )
 end
+
 
 
 
