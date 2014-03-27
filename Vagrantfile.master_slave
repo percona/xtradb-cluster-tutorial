@@ -18,6 +18,11 @@ def build_box( config, name, ip, server_id )
 	config.vm.define name do |node_config|
 		node_config.vm.hostname = name
 		node_config.vm.network :private_network, ip: ip
+    
+    # Permanent port forwards to make Vbox appliances easy.
+    node_config.vm.network "forwarded_port", guest: 22, host: 22200 + server_id, protocol: 'tcp'
+    node_config.vm.network "forwarded_port", guest: 9999, host: 9990 + server_id, protocol: 'tcp'
+    
 
 		node_puppet_config = $puppet_config.merge({
 			:server_id => server_id
@@ -46,12 +51,12 @@ def build_box( config, name, ip, server_id )
 end
 
 Vagrant.configure("2") do |config|
-	config.vm.box = "perconajayj/centos-x86_64-local_repo"
+	config.vm.box = "perconajayj/centos-x86_64"
 	config.ssh.username = "root"
 
-	build_box( config, 'node1', '192.168.70.2', '1' )
-	build_box( config, 'node2', '192.168.70.3', '2' )
-	build_box( config, 'node3', '192.168.70.3', '3' )
+	build_box( config, 'node1', '192.168.70.2', 1 )
+	build_box( config, 'node2', '192.168.70.3', 2 )
+	build_box( config, 'node3', '192.168.70.3', 3 )
 end
 
 
