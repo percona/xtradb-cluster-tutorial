@@ -75,7 +75,7 @@ Make the mysqld section of node3:/etc/my.cnf look like this::
 	wsrep_node_name                 = node3
 	wsrep_node_address              = 192.168.70.4
 
-	wsrep_sst_method                = xtrabackup
+	wsrep_sst_method                = xtrabackup-v2
 	wsrep_sst_auth		            = sst:secret
 
 	# innodb settings for galera
@@ -209,7 +209,7 @@ Node2's my.cnf should look like this::
 	wsrep_node_name                 = node2
 	wsrep_node_address              = 192.168.70.3
 
-	wsrep_sst_method                = xtrabackup
+	wsrep_sst_method                = xtrabackup-v2
 	wsrep_sst_auth		            = sst:secret
 
 	# innodb settings for galera
@@ -261,7 +261,7 @@ When a new node joins a cluster, it receives a state snapshot transfer (SST) fro
 
 If you watch ``myq_status`` you should see node3 enter the *donor* state for a bit, and then go back to *Sync*.  You should also see the node count go from 1 to 2 and back to 1 (see the *#* column).
 
-An SST is actually just a full backup.  In our case, we configured our ``wsrep_sst_method`` to be xtrabackup.  This is taking a hot backup of node3 and streaming it to node2.  
+An SST is actually just a full backup.  In our case, we configured our ``wsrep_sst_method`` to be xtrabackup-v2.  This is taking a hot backup of node3 and streaming it to node2.  
 
 In our case, this is failing for some reason. If you watched the process list ('px axf') on node3, you might have seen xtrabackup running.  When a donor node runs xtrabackup, a log is generated in /var/lib/mysql/innobackup.backup.log.  We should check here for an indication of what happened. 
 
