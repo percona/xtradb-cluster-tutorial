@@ -25,7 +25,7 @@ This tutorial uses Virtualbox and Vagrant.  Follow these steps to get setup:
 
 #. `Download and install Virtualbox`_: http://virtualbox.org
 #. `Download and install Vagrant`_: http://vagrantup.com
-#. `Get a copy of this repository`_: ``git clone https://github.com/jayjanssen/percona-xtradb-cluster-tutorial.git``
+#. `Get a copy of this repository`_: ``git clone https://github.com/percona/xtradb-cluster-tutorial.git``
 #. `vagrant up`_:: ``cd percona-xtradb-cluster-tutorial; vagrant up``
 #. 
 
