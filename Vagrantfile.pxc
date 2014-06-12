@@ -22,30 +22,48 @@ def build_box( config, name, ip, server_id )
     # Permanent port forwards to make Vbox appliances easy.
     node_config.vm.network "forwarded_port", guest: 22, host: 22200 + server_id, protocol: 'tcp'
     node_config.vm.network "forwarded_port", guest: 9999, host: 9990 + server_id, protocol: 'tcp'
+
+    # Provisioners
+    provision_puppet( config, "base.pp" )
+    provision_puppet( config, "pxc_server.pp" ) { |puppet|  
+      puppet.facter = {
+      	"percona_server_version"	=> mysql_version,
+      	'innodb_buffer_pool_size' => '128M',
+      	'innodb_log_file_size' => '64M',
+      	'innodb_flush_log_at_trx_commit' => '0',
+  			'server_id' => server_id
+      }
+    }
+    provision_puppet( config, "pxc_client.pp" ) { |puppet|
+      puppet.facter = {
+      	"percona_server_version"	=> mysql_version
+      }
+    }
+    provision_puppet( config, "sysbench.pp" )
+    provision_puppet( config, "percona_toolkit.pp" )
+    provision_puppet( config, "myq_gadgets.pp" )
     
+    # Uncomment the following when building Conference appliances
+    # provision_puppet( config, "local_percona_repo.pp" )
 
-		node_puppet_config = $puppet_config.merge({
-			:server_id => server_id
-		})
+    # Providers
+    provider_virtualbox( name, config, 256 ) { |vb, override|
+      provision_puppet( override, "pxc_server.pp" ) {|puppet|
+        puppet.facter = {"datadir_dev" => "dm-2"}
+      }
+    }
 
-		provider_aws( node_config, name, 'm1.small') { |aws, override|
-			aws.block_device_mapping = [
-				{
-					'DeviceName' => "/dev/sdb",
-					'VirtualName' => "ephemeral0"
-				}
-			]
-			provision_puppet( override, 'pxc.pp', 
-				node_puppet_config.merge( 'datadir_dev' => 'xvdb' )
-			)
-		}
-
-		provider_virtualbox( node_config, '256' ) { |vb, override|		
-			provision_puppet( override, 'pxc.pp', 
-				node_puppet_config.merge('datadir_dev' => 'dm-2')
-			)
-
-		}
+  	provider_aws( "PXC #{name}", config, 'm1.small', node_params['aws_region'], node_params['security_groups']) { |aws, override|
+  		aws.block_device_mapping = [
+  			{
+  				'DeviceName' => "/dev/sdb",
+  				'VirtualName' => "ephemeral0"
+  			}
+  		]
+      provision_puppet( override, "pxc_server.pp" ) {|puppet|
+        puppet.facter = {"datadir_dev" => "xvdb"}
+      }
+  	}
 
 	end
 end
@@ -58,6 +76,9 @@ Vagrant.configure("2") do |config|
 	build_box( config, 'node2', '192.168.70.3', 2 )
 	build_box( config, 'node3', '192.168.70.4', 3 )
 end
+
+
+
 
 
 
