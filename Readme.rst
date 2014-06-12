@@ -24,10 +24,10 @@ Creating the Tutorial Environment (short version)
 This tutorial uses Virtualbox and Vagrant.  Follow these steps to get setup:
 
 #. `Download and install Virtualbox`_: http://virtualbox.org
-#. `Download and install Vagrant`_: http://vagrantup.com
-#. `Get a copy of this repository`_: ``git clone https://github.com/jayjanssen/percona-xtradb-cluster-tutorial.git``
-#. `vagrant up`_:: ``cd percona-xtradb-cluster-tutorial; vagrant up``
-#. 
+#. `Download and install Vagrant`_: http://vagrantup.com (at least Vagrant 1.5)
+#. `Get a copy of this repository`_: ``git clone https://github.com/percona/xtradb-cluster-tutorial.git``
+#. `Initialize the vagrant-percona submodule`_: ``cd xtradb-cluster-tutorial; git submodule init; git submodule update``
+#. `vagrant up`_:: ``cd xtradb-cluster-tutorial; vagrant up``
 
 
 **NOTE** During the in-class tutorial, using Vagrant will not strictly be required.  
@@ -64,16 +64,25 @@ Get a copy of this repository
 
 If you are in a conference tutorial, there is a very good change this repository is available on a USB stick from the instructor::
 
-	cp -av /path/to/usb/stick/percona-xtradb-cluster-tutorial .
+	cp -av /path/to/usb/stick/xtradb-cluster-tutorial .
 
 You can also fetch this from github over the internet::
 
-	host> git clone https://github.com/jayjanssen/percona-xtradb-cluster-tutorial.git
+	host> git clone https://github.com/percona/xtradb-cluster-tutorial.git
 
 (Be sure to use the path to the branch of your choosing)
 
 You will need a local copy of all the code and configuration in this git repository on your local machine.  If you don't have/like git, you can download it a full tarball/zip file from github.
 
+
+Initialize the submodule
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+This tutorial is based on vagrant tools in another repo that is a submodule of this git repo.  To initialize this::
+
+	host> cd xtradb-cluster-tutorial
+	host> git submodule init
+	host> git submodule update
 
 vagrant up
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
