@@ -1,5 +1,5 @@
 Percona XtraDB Cluster Tutorial
-================================
+===============================
 
 This Tutorial to help you walk through various aspects of setting up, migrating to, and using Percona XtraDB Cluster / Galera.
 
@@ -11,22 +11,22 @@ This tutorial was written for Percona employees to give at conferences in either
 
 
 How to work through this Tutorial
-----------------------------------
+---------------------------------
 
-**STOP** If you are attending a tutorial, you will receive alternative instructions that do not require you to download anything significant from the Internet.  You can use these instructions to prepare your environment, but it should not be strictly necessary.
+.. note:: **STOP** If you are attending a tutorial, you will receive alternative instructions that do not require you to download anything significant from the Internet.  You can use these instructions to prepare your environment, but it should not be strictly necessary.
 
 The basic flow of working with this tutorial is to setup your environment and then work the module or modules of your choosing documented in the instructions folder.  
 
 
 Creating the Tutorial Environment (short version)
---------------------------------------------------
+-------------------------------------------------
 
 This tutorial uses Virtualbox and Vagrant.  Follow these steps to get setup:
 
 #. `Download and install Virtualbox`_: http://virtualbox.org
 #. `Download and install Vagrant`_: http://vagrantup.com (at least Vagrant 1.5)
 #. `Get a copy of this repository`_: ``git clone https://github.com/percona/xtradb-cluster-tutorial.git``
-#. `Initialize the vagrant-percona submodule`_: ``cd xtradb-cluster-tutorial; git submodule init; git submodule update``
+#. `Initialize the submodule`_: ``cd xtradb-cluster-tutorial; git submodule init; git submodule update``
 #. `vagrant up`_:: ``cd xtradb-cluster-tutorial; vagrant up``
 
 
@@ -34,17 +34,17 @@ This tutorial uses Virtualbox and Vagrant.  Follow these steps to get setup:
 
 
 Topics covered in this Tutorial
----------------------------------------
+-------------------------------
 
 Tutorial steps can be found in the 'instructions' directory.
 
 
 
 Creating the Tutorial Environment (Detailed Setup Steps)
-------------------------------------------------------------------------------
+--------------------------------------------------------
 
 Download and install Virtualbox
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Virtualbox can run virtual machines on your laptop and supports Linux, Mac, and Windows (and is free).
 
@@ -52,7 +52,7 @@ Download Virtualbox from `here <https://www.virtualbox.org/wiki/Downloads>`_.
 
 
 Download and install Vagrant
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
 Vagrant knows how to setup and manipulate a set of VirtualBox VMs using something called a *VagrantFile*, which is somewhat analogous to a *MakeFile*.
@@ -60,7 +60,7 @@ Vagrant knows how to setup and manipulate a set of VirtualBox VMs using somethin
 Download Vagrant from `here <http://vagrantup.com>`_.
 
 Get a copy of this repository
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 If you are in a conference tutorial, there is a very good change this repository is available on a USB stick from the instructor::
 
@@ -76,7 +76,7 @@ You will need a local copy of all the code and configuration in this git reposit
 
 
 Initialize the submodule
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~
 
 This tutorial is based on vagrant tools in another repo that is a submodule of this git repo.  To initialize this::
 
@@ -85,15 +85,16 @@ This tutorial is based on vagrant tools in another repo that is a submodule of t
 	host> git submodule update
 
 vagrant up
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~
 
 ::
+
 	cd percona-xtradb-cluster-tutorial
 	vagrant up
 
 Sometimes some race conditions creep into the provisioning in the ``vagrant up`` causing errors, in such cases it's generally safe to either re-run ``vagrant up`` or ``vagrant provision``.
 
-*If ``vagrant up`` doesn't work, be sure you are in the root directory of this repository and you see a Vagrantfile!*
+*If *``vagrant up``* doesn't work, be sure you are in the root directory of this repository and you see a Vagrantfile!*
 
 ``vagrant up`` sets up all the cluster nodes and PXC according to the rules found in the VagrantFile (and subsequent Puppet configuration).  
 
@@ -123,7 +124,7 @@ Can my machine handle this?
 
 
 Things you can do with vagrant
-------------------------------------
+------------------------------
 
 `vagrant up`
 	Creates any and all nodes called for by the Vagrantfile in the current working directory and provisions them (i.e., configures them by invoking Puppet on each).
@@ -158,7 +159,7 @@ To log into a node
 
 
 Notes
-------
+-----
 
 - Each node is running a primary IP on the 192.168.70.0/24 subnet.  For the purposes of these exercises, this is the network for all client connections as well as cluster replication and any other tasks.
 
@@ -240,7 +241,7 @@ This output will show us if there are any delays in the heartbeat compared with 
 
 
 Monitoring commit latency
-~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~
 
 To illustrate high client write latency, I have created a script called ``quick_update.pl``, which should be in your path.  This script does the following:
 	- Runs the same UPDATE command that pt-heartbeat does, though with only 10ms of sleep between each execution. It updates and prints a counter on each execution. 
@@ -267,7 +268,7 @@ Note that occasionally the writes to the 3 node cluster setup on VMs on your lap
 
 
 Using sysbench to generate load
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 To simulate a live environment, we will kick off setup and kickoff a sysbench oltp test with a single test thread.
 
@@ -308,7 +309,7 @@ Note that if you mess something up, you can cleanup the test table and start the
 
 
 Contributors
----------------------
+------------
 
 This repository is free to branch, open issues on, and submit pull requests to.  
 
