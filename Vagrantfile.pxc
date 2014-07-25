@@ -6,14 +6,6 @@
 # This sets up 3 nodes for replication.  Run 'ms-setup.pl' after these are provisioned.
 require './lib/vagrant-common.rb'
 
-# Our puppet config
-$puppet_config = {
-	'percona_server_version' => '56',
-	'innodb_buffer_pool_size' => '128M',
-	'innodb_log_file_size' => '64M',
-	'innodb_flush_log_at_trx_commit' => '0'
-}
-
 def build_box( config, name, ip, server_id )
 	config.vm.define name do |node_config|
 		node_config.vm.hostname = name
@@ -27,7 +19,7 @@ def build_box( config, name, ip, server_id )
     provision_puppet( config, "base.pp" )
     provision_puppet( config, "pxc_server.pp" ) { |puppet|  
       puppet.facter = {
-      	"percona_server_version"	=> mysql_version,
+				'percona_server_version' => '56',
       	'innodb_buffer_pool_size' => '128M',
       	'innodb_log_file_size' => '64M',
       	'innodb_flush_log_at_trx_commit' => '0',
@@ -36,7 +28,7 @@ def build_box( config, name, ip, server_id )
     }
     provision_puppet( config, "pxc_client.pp" ) { |puppet|
       puppet.facter = {
-      	"percona_server_version"	=> mysql_version
+      	"percona_server_version"	=> '56'
       }
     }
     provision_puppet( config, "sysbench.pp" )
@@ -53,7 +45,7 @@ def build_box( config, name, ip, server_id )
       }
     }
 
-  	provider_aws( "PXC #{name}", config, 'm1.small', node_params['aws_region'], node_params['security_groups']) { |aws, override|
+  	provider_aws( "PXC #{name}", config, 'm1.small', 'us-east-1', ['default','pxc']) { |aws, override|
   		aws.block_device_mapping = [
   			{
   				'DeviceName' => "/dev/sdb",
