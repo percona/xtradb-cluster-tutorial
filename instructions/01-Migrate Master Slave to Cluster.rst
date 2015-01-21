@@ -21,11 +21,50 @@ Start up the application
 
 We will use sysbench to simulate application load on our master node, node1::
 
-  [root@node1 ~]# run_sysbench_oltp.sh
+  [root@node1 ~]# run_sysbench_update_oltp.sh
 
 The sysbench run should output the current transaction rate and response time every second.  
 
 **Run sysbench oltp on node1, confirm replication is working to the slaves**
+
+
+Sanity Check the Environment
+------------------------------------------------------------------------
+
+We can sanity check our setup in two ways.  First, simply run pt-table-checksum on the master::
+
+	[root@node1 ~]# pt-table-checksum --user=test --password=test
+
+**Run pt-table-checksum from node1**
+
+This will output all the tables being checked. The 'test' mysql user is setup so it can connect to all the nodes from the master, and it will correctly report differences on the slave(s).  
+
+**Query the percona.checksums table on node2 and node3 and look for any differences**
+
+Secondly, we can check replication. Nodes 2 and 3 are slaves to node1, and we can certainly check ``SHOW SLAVE STATUS\G`` to see if there are any replication problems.  
+
+**Check SHOW SLAVE STATUS on nodes 2 and 3 to see if replication is working**
+
+A more programmatic way to check replication lag is to use pt-heartbeat::
+
+	[root@node1 ~]# pt-heartbeat --update --database percona --create-table --daemonize
+
+We can check the heartbeat by querying the percona.heartbeat table, or by running the pt-heartbeat command on node2 and node3::
+
+	[root@node2 mysql]# pt-heartbeat --monitor --database percona --master-server-id=1
+	0.00s [  0.00s,  0.00s,  0.00s ]
+	0.00s [  0.00s,  0.00s,  0.00s ]
+	0.00s [  0.00s,  0.00s,  0.00s ]
+	0.00s [  0.00s,  0.00s,  0.00s ]
+	0.00s [  0.00s,  0.00s,  0.00s ]
+	0.00s [  0.00s,  0.00s,  0.00s ]
+
+**Run pt-heartbeat on node1 and check the lag on node2 and node3**
+
+Try a few more experiments with the heartbeat::
+
+- Stop the heartbeat tool on node1 and see how that affects the output on node2 and node3
+- Stop replication on node3 (STOP SLAVE) for a while, then restart it.  How long does the heartbeat take to catch up?
 
 
 Update one slave to PXC
@@ -319,65 +358,6 @@ At this point in a production migration, we'd likely want to pause and make sure
 
 Some of these are more involved than others, but let's do a few.
 
-
-Doing a consistency check from standalone MySQL to PXC
-------------------------------------------------------------------------
-
-For this we will use pt-table-checksum.  Simply run pt-table-checksum on the master::
-
-	[root@node1 ~]# pt-table-checksum
-
-**Run pt-table-checksum from node1**
-
-This will output all the tables being checked.  If you setup a mysql user that can connect to all the nodes from the master, it will correctly report differences on the slave(s).  However, let's not trouble with that and just check the results directly on node3::
-
-	node3> SELECT db, tbl, SUM(this_cnt) AS total_rows, COUNT(*) AS chunks FROM percona.checksums WHERE ( master_cnt <> this_cnt OR master_crc <> this_crc OR ISNULL(master_crc) <> ISNULL(this_crc)) GROUP BY db, tbl;
-
-An empty set here means no diffs.  Look at the raw output of the table to see what it found::
-
-	node3> select * from percona.checksums;
-
-This table contains information about "this" node (node3) and the master (node1).  Scan the checksum (crc) and count (cnt) columns to spot differences.
-
-**Query the percona.checksums table on node3 and look for any differences**
-
-- Do you see any differences?
-- Why might there be differences in the mysql.* tables?
-- Can you account for any other differences?
-- How could you repair differences in there were (or are) any?
-
-**If there are any differences, try to repair them**
-
-
-Checking replication lag to the cluster
-----------------------------------------
-
-Node3 is a slave to node1, and we can certainly check ``SHOW SLAVE STATUS\G`` to see if there are any replication problems.  
-
-**Check SHOW SLAVE STATUS on node3 to see if replication is working**
-
-However, we can't use SHOW SLAVE STATUS to check if there is any lag to the other cluster node: node2.  A more programmatic way to check replication lag is to use pt-heartbeat::
-
-	[root@node1 ~]# pt-heartbeat --update --database percona --create-table
-
-We can check the heartbeat by querying the percona.heartbeat table, or by running the pt-heartbeat command on node2 and node3::
-
-	[root@node2 mysql]# pt-heartbeat --monitor --database percona --master-server-id=1
-	0.00s [  0.00s,  0.00s,  0.00s ]
-	0.00s [  0.00s,  0.00s,  0.00s ]
-	0.00s [  0.00s,  0.00s,  0.00s ]
-	0.00s [  0.00s,  0.00s,  0.00s ]
-	0.00s [  0.00s,  0.00s,  0.00s ]
-	0.00s [  0.00s,  0.00s,  0.00s ]
-
-**Run pt-heartbeat on node1 and check the lag on node2 and node3**
-
-Try a few more experiments with the heartbeat::
-
-- Stop the heartbeat tool on node1 and see how that affects the output on node2 and node3
-- Stop replication on node3 (STOP SLAVE) for a while, then restart it.  How long does it take to catch up?
-
-
 Finishing the migration
 -------------------------
 
@@ -385,6 +365,8 @@ Let's suppose we have done all our testing and validation.  How should we migrat
 
 Here's some possible steps:
 
+#. Ensure replication is caught up on the cluster (And is continuing to keep up)
+#. Revalidate the data is identical on the current master and the cluster with pt-table-checksum
 #. Shutdown the application pointing to node1
 #. Shutdown (and RESET) replication on node3 from node1
 #. Startup the application pointing to node3
@@ -395,4 +377,20 @@ Here's some possible steps:
 - How can you minimize the downtime?
 - Is there any rollback?
 
-*Migrate your application to run against node3.  Minimize downtime. Migrate node1 to the cluster*
+
+Joining node1 to the cluster without SST
+-----------------------------------------
+
+Our SST is not particularly expensive, but we have a few facts in this setup that can make it possible to avoid SST when joining node1 to the rest of the cluster.  
+
+#. The application only writes to node1 in this case and we have to stop the appplication to upgrade node1 (though in real prod cases, we might do something else).
+#. We know node1 and the cluster are in sync.
+
+If we simply take application downtime and then synchronize node1 to the cluster, we can do so in a tricky way to avoid SST.  
+
+#. Shut down sysbench on node1 and verify the nodes are caught up
+#. Update the packages and config on node1 to PXC
+#. Before starting mysql on node1, temporarily set wsrep_sst_method=skip in node1's my.cnf
+#. Start mysql on node1 and check for SST
+
+**Follow the above steps and get node1 synchronized to the rest of the cluster**
