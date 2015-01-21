@@ -13,49 +13,46 @@ def build_box( config, name, ip, server_id )
 		node_config.vm.network "forwarded_port", guest: 22, host: 22200 + server_id, protocol: 'tcp'
 		node_config.vm.network "forwarded_port", guest: 9999, host: 9990 + server_id, protocol: 'tcp'
 		
-		# Provisioners
-		provision_puppet( config, "base.pp" )
-		
+    # Provisioners
+    provision_puppet( node_config, "percona_server.pp" ) { |puppet| 
+      puppet.facter = {
+        # PXC setup
+        "percona_server_version"  => mysql_version,
+        'innodb_buffer_pool_size' => '128M',
+        'innodb_log_file_size' => '64M',
+        'innodb_flush_log_at_trx_commit' => '0',
+				'server_id' => server_id,
+        
+        # Sysbench setup
+        'sysbench_load' => true,
+        'schema' => 'test',
+        'tables' => 1,
+        'rows' => 250000,
+        'threads' => 1,
+        'tx_rate' => 10,
+      }
+    }
+    
 		# Uncomment the following when building Conference appliances
-		provision_puppet( config, "local_percona_repo.pp" )
-		
-		provision_puppet( config, "percona_server.pp" ) { |puppet|
-			puppet.facter = {
-				"percona_server_version"	=> mysql_version,
-				"innodb_buffer_pool_size" => "128M",
-				"innodb_log_file_size"		=> "64M",
-				'innodb_flush_log_at_trx_commit' => '0',
-						"server_id" => server_id
-			}
-		}
-		provision_puppet( config, "percona_client.pp" ) { |puppet|
-			puppet.facter = {
-				"percona_server_version"	=> mysql_version
-			}
-		}
-		provision_puppet( config, "sysbench.pp" )
-		provision_puppet( config, "percona_toolkit.pp" )
-		provision_puppet( config, "myq_gadgets.pp" )
-		provision_puppet( config, "percona_access.pp" )
-
-
+		provision_puppet( node_config, "local_percona_repo.pp" )
+    
 		# Providers
-		provider_virtualbox( name, config, 256 ) { |vb, override|
+		provider_virtualbox( name, node_config, 256 ) { |vb, override|
 			provision_puppet( override, "percona_server.pp" ) {|puppet|
 				puppet.facter = {"datadir_dev" => "dm-2"}
 			}
 		}
 
-		provider_aws( name, config, 'm1.small') { |aws, override|
+		provider_aws( name, node_config, 'm1.small') { |aws, override|
 			aws.block_device_mapping = [
 				{
 					'DeviceName' => "/dev/sdb",
 					'VirtualName' => "ephemeral0"
 				}
 			]
-					provision_puppet( override, "percona_server.pp" ) {|puppet|
-						puppet.facter = {"datadir_dev" => "xvdb"}
-					}
+			provision_puppet( override, "percona_server.pp" ) {|puppet|
+				puppet.facter = {"datadir_dev" => "xvdb"}
+			}
 		}
 	end
 	
