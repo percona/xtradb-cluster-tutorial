@@ -1,12 +1,10 @@
 # -*- mode: ruby -*-
 # vi: set ft=ruby :
 
-# Assumes a box from https://github.com/jayjanssen/packer-percona
-
-# This sets up 3 nodes for replication.  Run 'ms-setup.pl' after these are provisioned.
-require './lib/vagrant-common.rb'
+require File.dirname(__FILE__) + '/lib/vagrant-common.rb'
 
 def build_box( config, name, ip, server_id )
+	mysql_version = "56"
 	config.vm.define name do |node_config|
 		node_config.vm.hostname = name
 		node_config.vm.network :private_network, ip: ip
@@ -16,36 +14,56 @@ def build_box( config, name, ip, server_id )
     node_config.vm.network "forwarded_port", guest: 9999, host: 9990 + server_id, protocol: 'tcp'
 
     # Provisioners
-    provision_puppet( config, "base.pp" )
-    provision_puppet( config, "pxc_server.pp" ) { |puppet|  
+		# Uncomment the following when building Conference appliances
+		provision_puppet( node_config, "local_percona_repo.pp" )
+    
+    provision_puppet( node_config, "pxc_server.pp" ) { |puppet| 
       puppet.facter = {
-				'percona_server_version' => '56',
-      	'innodb_buffer_pool_size' => '128M',
-      	'innodb_log_file_size' => '64M',
-      	'innodb_flush_log_at_trx_commit' => '0',
-  			'server_id' => server_id
+        # PXC setup
+        "percona_server_version"  => mysql_version,
+        'innodb_buffer_pool_size' => '128M',
+        'innodb_log_file_size' => '64M',
+        'innodb_flush_log_at_trx_commit' => '0',
+        'pxc_bootstrap_node' => (server_id == 1 ? true : false ),
+        'wsrep_cluster_address' => "gcomm://192.168.70.2,192.168.70.3, 192.168.70.4",
+        
+        # Sysbench setup
+        'sysbench_load' => (server_id == 1 ? true : false ),
+        'schema' => 'test',
+        'tables' => 1,
+        'rows' => 250000,
+        'threads' => 1,
+        'tx_rate' => 10,
+        
+        # PCT setup
+        'percona_agent_api_key' => ENV['PERCONA_AGENT_API_KEY']
       }
     }
-    provision_puppet( config, "pxc_client.pp" ) { |puppet|
-      puppet.facter = {
-      	"percona_server_version"	=> '56'
-      }
-    }
-    provision_puppet( config, "sysbench.pp" )
-    provision_puppet( config, "percona_toolkit.pp" )
-    provision_puppet( config, "myq_gadgets.pp" )
+
     
     # Uncomment the following when building Conference appliances
     # provision_puppet( config, "local_percona_repo.pp" )
 
     # Providers
-    provider_virtualbox( name, config, 256 ) { |vb, override|
+    provider_virtualbox( name, node_config, 256 ) { |vb, override|
       provision_puppet( override, "pxc_server.pp" ) {|puppet|
-        puppet.facter = {"datadir_dev" => "dm-2"}
+        puppet.facter = {
+          'default_interface' => 'eth1',
+          "datadir_dev" => "dm-2"
+        }
+      }
+    }
+    
+    provider_vmware( name, node_config, 256 ) { |vb, override|
+      provision_puppet( override, "pxc_server.pp" ) {|puppet|
+        puppet.facter = {
+          'default_interface' => 'eth1',
+          'datadir_dev' => 'dm-2',
+        }
       }
     }
 
-  	provider_aws( "PXC #{name}", config, 'm1.small', 'us-east-1', ['default','pxc']) { |aws, override|
+  	provider_aws( "PXC #{name}", node_config, 'm1.small', 'us-east-1', ['default','pxc']) { |aws, override|
   		aws.block_device_mapping = [
   			{
   				'DeviceName' => "/dev/sdb",
@@ -62,12 +80,15 @@ end
 
 Vagrant.configure("2") do |config|
 	config.vm.box = "perconajayj/centos-x86_64"
+	config.vm.box_version = "~> 7.0"
 	config.ssh.username = "root"
 
 	build_box( config, 'node1', '192.168.70.2', 1 )
 	build_box( config, 'node2', '192.168.70.3', 2 )
 	build_box( config, 'node3', '192.168.70.4', 3 )
 end
+
+
 
 
 

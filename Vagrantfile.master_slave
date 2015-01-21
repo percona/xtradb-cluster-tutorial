@@ -55,11 +55,6 @@ def build_box( config, name, ip, server_id )
 			}
 		}
 	end
-	
-	if block_given?
-		yield
-	end
-	
 end
 
 
