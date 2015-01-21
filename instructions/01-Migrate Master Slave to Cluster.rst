@@ -19,21 +19,13 @@ Your install should have all three nodes setup.  Node1 should be the master and 
 Start up the application
 ----------------------------------
 
-First our application needs a user::
+We will use sysbench to simulate application load on our master node, node1::
 
-	node1> grant all on test.* to test@'localhost' identified by 'test';
-	node1> grant all on test.* to test@'%' identified by 'test';
-	
-These servers are configured, but there is no data.  Let's use sysbench to create some test data and run a simulated workload against it on the master::
-
-	[root@node1 ~]# sysbench --test=sysbench_tests/db/common.lua --db-driver=mysql --mysql-user=test --mysql-password=test --mysql-db=test --oltp-table-size=250000 --oltp-auto-inc=off  prepare
-	
-	[root@node1 ~]# sysbench --db-driver=mysql --test=sysbench_tests/db/oltp.lua --mysql-host=node1 --mysql-user=test --mysql-password=test --mysql-db=test --oltp-table-size=250000 --report-interval=1 --max-requests=0 --tx-rate=10 run | grep tps
-
+  [root@node1 ~]# run_sysbench_oltp.sh
 
 The sysbench run should output the current transaction rate and response time every second.  
 
-**Prepare and run a sysbench test on node1, confirm replication is working to the slaves**
+**Run sysbench oltp on node1, confirm replication is working to the slaves**
 
 
 Update one slave to PXC
@@ -41,10 +33,9 @@ Update one slave to PXC
 
 Now that we have a verified working Master/Slave environment with real load, we want to take one of the slaves (we'll start with node3) and convert that to the PXC software.  Each Percona Server package has a PXC equivalent, and PXC is a drop in replacement for Percona server, so we'll simply remove Percona Server and install PXC::
 
-	[root@node3 ~]# service mysql stop
-	[root@node3 ~]# yum remove Percona-Server-server-56 Percona-Server-client-56 Percona-Server-shared-56
-	[root@node3 ~]# yum install Percona-XtraDB-Cluster-56
-	[root@node3 ~]# service mysql start
+	[root@node3 ~]# systemctl stop mysql
+  [root@node3 ~]# yum swap -- remove Percona-Server-shared-56 Percona-Server-server-56 -- install Percona-XtraDB-Cluster-shared-56 Percona-XtraDB-Cluster-server-56
+	[root@node3 ~]# systemctl start mysql
 	[root@node3 ~]# mysql -e "show slave status\G"
 
 MySQL should startup correctly, and replication should resume from the master.   
@@ -88,15 +79,15 @@ Note that the node_address may be different if you are using AWS.  It should be 
 
 Now restart mysql on node3::
 
-	[root@node3 ~]# service mysql restart
+	[root@node3 ~]# systemctl restart mysql
 
 - Does MySQL restart?  
 - What's in the error log?
 - What could be going wrong?
 
-The first node started in a PXC cluster must be 'bootstrapped'.  The simple way to do this is to use an extension to the init script::
+The first node started in a PXC cluster must be 'bootstrapped'. If a node is started without being bootstrapped and it cannot find an existing cluster to connect to, it will hang waiting for other nodes to appear.  You have to kill -9 this mysqld and start again. The simple way to bootstrap with systemd is to do this::
 
-	[root@node3 mysql]# service mysql bootstrap-pxc
+  [root@node3 ~]# systemctl start mysql@bootstrap
 	
 
 **Get node3 started, there may be hurdles to overcome**
@@ -108,7 +99,7 @@ We've configured node3 as our initial cluster node.  What's more is that we will
 
 To check the cluster state, we will use the ``myq_status`` tool.  Execute::
 
-[root@node3 ~]# myq_status wsrep
+	[root@node3 ~]# myq_status wsrep
 
 This tool shows us information about the node state.  Try to determine:
 
@@ -140,7 +131,11 @@ We need to configure ``log-slave-updates`` on node3 to treat incoming mysql repl
 
 	log-slave-updates
 
-**Reconfigure node3 and restart replication**
+**Reconfigure node3 and restart mysqld**
+
+Restarting a bootstrapped node with systemd is weird:
+
+	[root@node3 ~]# systemctl restart mysql@bootstrap
 
 What do you see in ``myq_status`` now?
 
@@ -243,7 +238,9 @@ So, it seems we're ready to restart node2.  When we restart mysql there's a lot 
 - /var/lib/mysql/error.log on both node3 and node2
 - the output of 'ps axf' on node3 and node2 while node2 is trying to start
 
-Now, let's restart mysql on node2 and see what happens.
+Now, let's restart mysql on node2 and see what happens::
+
+	[root@node2 ~]# systemctl restart mysql
 
 - Does the init script report a successful start?
 - What seems to happen to node3's state?
@@ -365,7 +362,7 @@ However, we can't use SHOW SLAVE STATUS to check if there is any lag to the othe
 
 We can check the heartbeat by querying the percona.heartbeat table, or by running the pt-heartbeat command on node2 and node3::
 
-	[root@node2 mysql]# pt-heartbeat --monitor --database percona --master-server-id=192168702
+	[root@node2 mysql]# pt-heartbeat --monitor --database percona --master-server-id=1
 	0.00s [  0.00s,  0.00s,  0.00s ]
 	0.00s [  0.00s,  0.00s,  0.00s ]
 	0.00s [  0.00s,  0.00s,  0.00s ]
