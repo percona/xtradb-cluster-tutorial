@@ -24,7 +24,7 @@ def build_box( config, name, ip, server_id )
 				'server_id' => server_id,
         
         # Sysbench setup
-        'sysbench_load' => true,
+        'sysbench_load' => (server_id == 1 ? true : false ),
         'schema' => 'test',
         'tables' => 1,
         'rows' => 250000,
