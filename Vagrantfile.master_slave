@@ -14,6 +14,9 @@ def build_box( config, name, ip, server_id )
 		node_config.vm.network "forwarded_port", guest: 9999, host: 9990 + server_id, protocol: 'tcp'
 		
     # Provisioners
+		# Uncomment the following when building Conference appliances
+		provision_puppet( node_config, "local_percona_repo.pp" )
+    
     provision_puppet( node_config, "percona_server.pp" ) { |puppet| 
       puppet.facter = {
         # PXC setup
@@ -32,9 +35,6 @@ def build_box( config, name, ip, server_id )
         'tx_rate' => 10,
       }
     }
-    
-		# Uncomment the following when building Conference appliances
-		provision_puppet( node_config, "local_percona_repo.pp" )
     
 		# Providers
 		provider_virtualbox( name, node_config, 256 ) { |vb, override|
