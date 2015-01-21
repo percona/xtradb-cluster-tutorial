@@ -27,23 +27,10 @@ Checking IST configuration
 
 The IST configuration is buried in the ``wsrep_provider_options`` MySQL variable::
 
-	node3 mysql> show variables like 'wsrep_provider_options'\G
+	node3 mysql> show global variables like 'wsrep_provider_options'\G
 	*************************** 1. row ***************************
 	Variable_name: wsrep_provider_options
-	        Value: base_host = 192.168.70.4; base_port = 4567; evs.debug_log_mask = 0x1; \
-		evs.inactive_check_period = PT0.5S; evs.inactive_timeout = PT15S; evs.info_log_mask = 0; \
-		evs.install_timeout = PT15S; evs.join_retrans_period = PT0.3S; evs.keepalive_period = PT1S; \ 
-		evs.max_install_timeouts = 1; evs.send_window = 4; evs.stats_report_period = PT1M; \
-		evs.suspect_timeout = PT5S; evs.use_aggregate = true; evs.user_send_window = 2; evs.version = 0; \
-		evs.view_forget_timeout = PT5M; gcache.dir = /var/lib/mysql/; gcache.keep_pages_size = 0; \
-		gcache.mem_size = 0; gcache.name = /var/lib/mysql//galera.cache; gcache.page_size = 128M; \
-		gcache.size = 128M; gcs.fc_debug = 0; gcs.fc_factor = 0.5; gcs.fc_limit = 16; gcs.fc_master_slave = NO; \
-		gcs.max_packet_size = 64500; gcs.max_throttle = 0.25; gcs.recv_q_hard_limit = 9223372036854775807; \
-		gcs.recv_q_soft_limit = 0.25; gcs.sync_donor = NO; gmcast.listen_addr = tcp://0.0.0.0:4567; \ 
-		gmcast.mcast_addr = ; gmcast.mcast_ttl = 1; gmcast.peer_timeout = PT3S; gmcast.time_wait = PT5S; \ 
-		gmcast.version = 0; ist.recv_addr = 192.168.70.4; pc.checksum = true; pc.ignore_quorum = false; \ 
-		pc.ignore_sb = false; pc.linger = PT2S; pc.npvo = false; pc.version = 0; protonet.backend = asio; \ 
-		protonet.version = 0; replicator.causal_read_timeout = PT30S; replicator.commit_order = 3
+	        Value: base_host = 192.168.70.4; base_port = 4567; cert.log_conflicts = no; debug = no; evs.auto_evict = 0; evs.causal_keepalive_period = PT1S; evs.debug_log_mask = 0x1; evs.delay_margin = PT1S; evs.delayed_keep_period = PT30S; evs.inactive_check_period = PT0.5S; evs.inactive_timeout = PT15S; evs.info_log_mask = 0; evs.install_timeout = PT7.5S; evs.join_retrans_period = PT1S; evs.keepalive_period = PT1S; evs.max_install_timeouts = 3; evs.send_window = 4; evs.stats_report_period = PT1M; evs.suspect_timeout = PT5S; evs.use_aggregate = true; evs.user_send_window = 2; evs.version = 0; evs.view_forget_timeout = P1D; gcache.dir = /var/lib/mysql/; gcache.keep_pages_size = 0; gcache.mem_size = 0; gcache.name = /var/lib/mysql//galera.cache; gcache.page_size = 128M; gcache.size = 128M; gcs.fc_debug = 0; gcs.fc_factor = 1.0; gcs.fc_limit = 16; gcs.fc_master_slave = no; gcs.max_packet_size = 64500; gcs.max_throttle = 0.25; gcs.recv_q_hard_limit = 9223372036854775807; gcs.recv_q_soft_limit = 0.25; gcs.sync_donor = no; gmcast.listen_addr = tcp://0.0.0.0:4567; gmcast.mcast_addr = ; gmcast.mcast_ttl = 1; gmcast.peer_timeout = PT3S; gmcast.segment = 0; gmcast.time_wait = PT5S; gmcast.version = 0; ist.recv_addr = 192.168.70.4; pc.announce_timeout = PT3S; pc.checksum = false; pc.ignore_quorum = false; pc.ignore_sb = false; pc.linger = PT20S; pc.npvo = false; pc.recovery = true; pc.version = 0; pc.wait_prim = true; pc.wait_prim_timeout = P30S; pc.weight = 1; protonet.backend = asio; protonet.version = 0; repl.causal_read_timeout = PT30S; repl.commit_order = 3; repl.key_format = FLAT8; repl.max_ws_size = 2147483647; repl.proto_max = 6; socket.checksum = 2;
 	1 row in set (0.00 sec)
 
 Specifically, look for ``ist.recv_addr``.
@@ -62,9 +49,9 @@ Now, we have traffic writing to node1.
 
 Go to node3.  Watch the error log, and in another window restart mysql::
 
-	[root@node3 ~]# tail -f /var/lib/mysql/node3.err 
-	[root@node3 ~]# service mysql stop
-	[root@node3 ~]# service mysql start
+	[root@node3 ~]# tail -f /var/lib/mysql/error.log
+	[root@node3 ~]# systemctl stop mysql@bootstrap
+	[root@node3 ~]# systemctl start mysql
 	
 
 Also watch ``myq_status`` on the other nodes to see how the cluster behaves.
@@ -96,14 +83,14 @@ IST viability depends entirely on the donor node.  If the Donor has all the tran
 
 To test this, we will stop node2, stop node3, then start node2 and examine node1 and node2 for the viability of being an IST donor for node3::
 
-	[root@node2 ~]# service mysql stop
-	[root@node3 ~]# service mysql stop
+	[root@node2 ~]# systemctl stop mysql
+	[root@node3 ~]# systemctl stop mysql
 
 **Stop node2 and node3***
 
 Now restart node2 and check the on node1 and node2::
 
-	[root@node2 ~]# service mysql start
+	[root@node2 ~]# systemctl start mysql
 	node1 mysql> show global status like 'wsrep_local_cached_downto';
 	node2 mysql> show global status like 'wsrep_local_cached_downto';
 	
@@ -116,12 +103,16 @@ Now we compare this information to the last GTID on node3 before we start it up:
 
 - Which node(s) are a viable IST donor for node3?
 
-Node1 is the only viable IST donor.  To avoid SST, explicitly specify node1 as the donor when you restart node3::
+Node1 is the only viable IST donor. If the cluster selected node2 as the donor, node3 would be forced to do a full SST.  However, PXC 5.6 has a feature to incorporate IST viability into donor selection.  Let's test this out by trying to force node3 to get a state transfer from node2.  To do this with systemd, you must modify your my.cnf file to include this line::
 
-	[root@node3 ~]# service mysql start --wsrep-sst-donor=node1
+	wsrep_sst_donor = node2
 
-*Note that not all Linux distributions allow you to pass mysqld options via the 'service' command or directly via the init scripts.  You may need to specify a donor like this in your my.cnf*
+Then start mysql on node3 and watch the logs carefully to see what happens::
 
+	[root@node3 ~]# systemctl start mysql
+
+- Which node gave the state transfer?
+- Was it SST or IST?
 
 Application Interaction with the Cluster
 ----------------------------------------
@@ -129,7 +120,7 @@ Application Interaction with the Cluster
 Reading and Writing to the Cluster
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-It is recommended that you run ``myq_status -t 1 wsrep`` on each node in a terminal window (or windows) that you can easy glance at.  This will show you the status of the cluster at a glance.  
+It is recommended that you run ``myq_status wsrep`` on each node in a terminal window (or windows) that you can easy glance at.  This will show you the status of the cluster at a glance.  
 
 Pick a node (any node) and create a new table in the ``test`` schema::
 
@@ -241,7 +232,7 @@ First, let's setup a test so we can see when these deadlocks happen.  There is m
 
 Startup ``myq_status`` on two of your nodes and check those columns.  On the same two nodes, startup sysbench::
 
-	 sysbench --db-driver=mysql --test=sysbench_tests/db/oltp.lua --mysql-user=test --mysql-password=test --mysql-db=test --oltp-table-size=250000 --report-interval=1 --max-requests=0 --tx-rate=10 run | grep tps
+	 sysbench --db-driver=mysql --test=sysbench_tests/db/update_index.lua --mysql-user=test --mysql-password=test --mysql-db=test --oltp-table-size=250000 --report-interval=1 --max-requests=0 --tx-rate=10 run | grep tps
 
 *note that I removed the --mysql-host option -- this defaults to the local server**
 
@@ -251,7 +242,7 @@ Startup ``myq_status`` on two of your nodes and check those columns.  On the sam
 
 It is most likely the case that you don't see any.  This sysbench is doing writes spread out across all 250k rows in a single table.  As these conflicts happen more readily with a smaller working set, simply re-start sysbench with a smaller ``--oltp-table-size``::
 
-	sysbench --test=sysbench_tests/db/oltp.lua \
+	sysbench --test=sysbench_tests/db/update_index.lua \
 	--mysql-user=test --mysql-db=test \
 	--oltp-table-size=25000 --report-interval=1 --max-requests=0 \
 	--tx-rate=10 run | grep tps
@@ -265,17 +256,13 @@ It is most likely the case that you don't see any.  This sysbench is doing write
 
 If you check the sysbench command line more closely, you'll see a ``--tx-rate`` option.  This is limiting the speed of the sysbench test to 10 transactions per second.  Let's remove that and see how it affects the conflict rate.  Note that this will increase the CPU utilization on your system, so you probably don't want to leave it running very long::
 
-	sysbench --test=sysbench_tests/db/oltp.lua \
+	sysbench --test=sysbench_tests/db/update_index.lua \
 	--mysql-user=test --mysql-db=test \
 	--oltp-table-size=2500 --report-interval=1 --max-requests=0 \
 	run | grep tps
 
 At this point you should be getting bfas regularly.  Keep reducing the table size until you see some lcfs. It may take a while to see an lcf.
 
-You may also need to do the following to get the conditions right to see an lcf:
-
-- set global innodb_flush_log_at_trx_commit=0
-- set global wsrep_slave_threads=1
 
 **Remove the tx-rate option and keep reducing the working set until you see at least one lcf**
 
@@ -299,15 +286,70 @@ Feel free to use the documentation for these `settings<http://www.percona.com/do
 **Run those commands on a node (or nodes) in your cluster and try to see how they line up with myq_status**
 
 
+Large Transactions
+-----------------------
+
+Large transactions (transactions modifying a large set of data) are problematic for Galera.  Let's see it in action.  Restart the original sysbench on node1::
+
+	[root@node1 ~]# run_sysbench_oltp.sh
+	
+**Restart a rate limited sysbench on node1**
+
+Create a copy of our test table with data from the original table::
+
+	node2 mysql> create table test.foo like test.sbtest1;	
+	node2 mysql> insert into test.foo select * from test.sbtest1;
+
+The second statement is a single transaction copying the entirety of test.sbtest1 to test.foo.  Observe the behavior of the application as well as myq_status stats on all nodes while it runs and replicates to the cluster.
+
+
+Setting limits on transaction size in the cluster
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+It is possible to limit the size of allowable transactions in a cluster.  These settings are::
+
+	node2 mysql> show global variables like 'wsrep_max%';
+	+-------------------+------------+
+	| Variable_name     | Value      |
+	+-------------------+------------+
+	| wsrep_max_ws_rows | 131072     |
+	| wsrep_max_ws_size | 1073741824 |
+	+-------------------+------------+
+	2 rows in set (0.04 sec)
+
+Let's experiment with them and try to prevent large transactions on our cluster::
+
+	node2 mysql> set global wsrep_max_ws_rows=10000;
+	node2 mysql> truncate table test.foo; insert into test.foo select * from test.sbtest1;
+
+- Does it have any effect?
+
+	node2 mysql> set global wsrep_max_ws_size=10000000;
+	node2 mysql> truncate table test.foo; insert into test.foo select * from test.sbtest1;
+
+- Does it have any effect?
+
+
+Doing smaller transactions instead
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Avoiding large transactions is often something that requires modifying the application.  In our example above, we could have used pt-archiver in the Percona toolkit as an alternative way to get a copy of the data from one table to another.  Let's try it::
+
+	node2 mysql> truncate test.foo;
+	[root@node2 ~]# pt-archiver --source D=test,t=sbtest1 --dest D=test,t=foo --no-delete --where 1=1 --progress=1000 --txn-size=500
+	
+If you have large transactions in your application, it's important to break them into smaller ones.  
+
+
 Online Schema Changes
 -----------------------
 
 It's important to know how to make schema changes within the cluster.  Restart the original sysbench on node1::
 
-	[root@node1 ~]# sysbench --db-driver=mysql --test=sysbench_tests/db/oltp.lua --mysql-host=node1 --mysql-user=test --mysql-password=test --mysql-db=test --oltp-table-size=250000 --report-interval=1 --max-requests=0 --tx-rate=10 run | grep tps
-
+	[root@node1 ~]# run_sysbench_oltp.sh
 
 **Restart a rate limited sysbench on node1**
+
 
 Basic Alter Table
 ~~~~~~~~~~~~~~~~~~~~
@@ -332,16 +374,7 @@ Now, let's go to node2 and do a similar operation::
 - Does running the command from another node make a difference?
 
 
-Create a copy of our test table with data from the original table::
-
-	node2 mysql> create table test.foo like test.sbtest1;	
-	node2 mysql> insert into test.foo select * from test.sbtest1;
-
-**Create and populate test.foo using the above commands**
-
-- What effect does this have on the cluster?
-
-Now let's run the ALTER on this new table::
+Now let's run the ALTER on the new table we created above::
 
 	node2 mysql> alter table test.foo add column `o` varchar(32);
 
@@ -365,7 +398,6 @@ Add another column to ``test.foo`` (the table that sysbench is *not* modifying):
 **Set wsrep_OSU_method to RSU and add another column to test.foo on node2**
 
 - What is the effect on our live workload?
-
 
 Add a column on ``test.sbtest``, but on node2::
 
