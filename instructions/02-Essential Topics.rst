@@ -438,6 +438,10 @@ Now, let's do our schema change fully non-blocking::
 **Run pt-osc from node2**
 
 - Does this work?  If not, why? (hint: check for Conflicts)
-- What can make it work in this case? (`hint<http://www.percona.com/doc/percona-toolkit/2.1/pt-online-schema-change.html#cmdoption-pt-online-schema-change--retries>`_)
+- What can make it work in this case? (`hint<http://www.percona.com/doc/percona-toolkit/2.2/pt-online-schema-change.html#cmdoption-pt-online-schema-change--tries>`_)
 
 **Make necessary adjustments to get the pt-osc completed**
+
+  Here's the solution to increase how often row copying retries::
+
+	pt-online-schema-change --alter "add column z varchar(32)" D=test,t=sbtest1 --execute --tries=copy_rows:1000:0.5
