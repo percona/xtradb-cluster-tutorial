@@ -13,11 +13,11 @@ Setup
 
 We will run our application workload on node1::
 
-	[root@node1 ~]# sysbench --db-driver=mysql --test=sysbench_tests/db/oltp.lua --mysql-host=node1 --mysql-user=test --mysql-password=test --mysql-db=test --oltp-table-size=250000 --report-interval=1 --max-requests=0 --tx-rate=10 run | grep tps
+	[root@node1 ~]# run_sysbench_oltp.lua
 
 Let's use node3 as the node we take in and out of the cluster with some kind of simulated failure.
 
-I highly recommend you run ``myq_status -t 1 wsrep`` on each node in a separate window or set of windows so you can monitor the state of each node at a glance as we run our tests.
+I highly recommend you run ``myq_status wsrep`` on each node in a separate window or set of windows so you can monitor the state of each node at a glance as we run our tests.
 
 After each of the following steps, be sure mysqld is up and running on all nodes, and all 3 nodes belong to the cluster.
 
@@ -27,7 +27,7 @@ Latency incurred by a node stop/start
 
 What does explicitly starting and stopping nodes in our cluster do to our write clients?  Let's see::
 
-	[root@node3 ~]# date; service mysql restart
+	[root@node3 ~]# date; systemctl restart mysql
 
 **Restart mysql on node3 and observe how the cluster and the application reacts**
 
@@ -104,7 +104,7 @@ Two node cluster without arbitration
 
 Shut down mysql on node2, leaving node1 and node3 as the sole members of the cluster::
 
-	[root@node2 ~]# service mysql stop
+	[root@node2 ~]# systemctl stop mysql
 
 **Shutdown node2**
 
@@ -112,7 +112,7 @@ Shut down mysql on node2, leaving node1 and node3 as the sole members of the clu
 
 Simulate a network failure between node1 and node3::
 
-	[root@node3 ~]# iptables -A INPUT -s 192.168.70.2 -j DROP; iptables -A OUTPUT -s 192.168.70.2 -j DROP; 
+	[root@node3 ~]# date; iptables -A INPUT -s 192.168.70.2 -j DROP; iptables -A OUTPUT -s 192.168.70.2 -j DROP; 
 
 **Simulate a network failure on node3**
 
@@ -134,13 +134,14 @@ Replacing a node with garbd
 
 So we've learned that an ungraceful failure in a two node cluster leaves the cluster in an inoperable state.  This is by design and to prevent split brain network partitions from ruining your day.  Since this is a very undesirable thing to happen, it's best if we can run a 3rd node, but what if we only have budget for two beefy PXC nodes?
 
-In such a case, we turn to ``garbd``.  Let's startup garbd on node2::
+In such a case, we turn to ``garbd``.  Let's install and startup garbd on node2::
 
+	[root@node2 ~]# yum install Percona-XtraDB-Cluster-garbd-3.x86_64
 	[root@node2 ~]# garbd --help
 
 We have to invoke ``garbd`` from the command line, there are no init scripts yet.  We need to give it one of the existing nodes to connect to, and the name of the cluster::
 
-	[root@node2 ~]# garbd -a gcomm://192.168.70.2,192.168.70.3,192.168.70.4 -g mycluster
+	[root@node2 ~]# garbd -a gcomm://192.168.70.2:4567,192.168.70.3:4567,192.168.70.4:4567 -g mycluster
 
 **Start garbd on node2**
 
