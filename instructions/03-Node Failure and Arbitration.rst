@@ -40,7 +40,7 @@ Partial network failure
 
 As an experiment, let's see what happens if node3 only looses connectivity to node1 (and not to node2)::
 
-	[root@node3 ~]# date; iptables -A INPUT -s 192.168.70.2 -j DROP; iptables -A OUTPUT -s 192.168.70.2 -j DROP
+	[root@node3 ~]# date; iptables -A INPUT -s node1 -j DROP; iptables -A OUTPUT -s node1 -j DROP
 
 *Prevent any network communication to node3 from node1
 
@@ -60,7 +60,7 @@ Total network failure
 
 A graceful node mysqld shutdown should behave differently from a node that simply stops responding on the network by dropping all packets on node3 to and from the other nodes::
 
-	[root@node3 ~]# date; iptables -A INPUT -s 192.168.70.2 -j DROP; iptables -A INPUT -s 192.168.70.3 -j DROP; iptables -A OUTPUT -s 192.168.70.2 -j DROP; iptables -A OUTPUT -s 192.168.70.3 -j DROP
+	[root@node3 ~]# date; iptables -A INPUT -s node1 -j DROP; iptables -A INPUT -s node2 -j DROP; iptables -A OUTPUT -s node1 -j DROP; iptables -A OUTPUT -s node2 -j DROP
 
 **Block all traffic from the other nodes into node3**
 
@@ -112,7 +112,7 @@ Shut down mysql on node2, leaving node1 and node3 as the sole members of the clu
 
 Simulate a network failure between node1 and node3::
 
-	[root@node3 ~]# date; iptables -A INPUT -s 192.168.70.2 -j DROP; iptables -A OUTPUT -s 192.168.70.2 -j DROP; 
+	[root@node3 ~]# date; iptables -A INPUT -s node1 -j DROP; iptables -A OUTPUT -s node1 -j DROP
 
 **Simulate a network failure on node3**
 
@@ -141,7 +141,7 @@ In such a case, we turn to ``garbd``.  Let's install and startup garbd on node2:
 
 We have to invoke ``garbd`` from the command line, there are no init scripts yet.  We need to give it one of the existing nodes to connect to, and the name of the cluster::
 
-	[root@node2 ~]# garbd -a gcomm://192.168.70.2:4567,192.168.70.3:4567,192.168.70.4:4567 -g mycluster
+	[root@node2 ~]# garbd -a gcomm://node1:4567,node3:4567 -g mycluster
 
 **Start garbd on node2**
 
@@ -150,8 +150,8 @@ We have to invoke ``garbd`` from the command line, there are no init scripts yet
 
 Now that we have 3 nodes, we can simulate node3 going down (network loss to both nodes)::
 
-	[root@node3 ~]# iptables -A INPUT -s 192.168.70.2 -j DROP; iptables -A INPUT -s 192.168.70.3 -j DROP; iptables -A OUTPUT -s 192.168.70.2 -j DROP; iptables -A OUTPUT -s 192.168.70.3 -j DROP
-
+	[root@node3 ~]# date; iptables -A INPUT -s node1 -j DROP; iptables -A INPUT -s node2 -j DROP; iptables -A OUTPUT -s node1 -j DROP; iptables -A OUTPUT -s node2 -j DROP
+	
 **Completely isolate node3 from the other two nodes**
 
 - What (eventually) happens?  Why?  How long does it take?
@@ -168,7 +168,7 @@ Replication through garbd
 
 Now, let's simulate a network issue from node1 to node3::
 
-	[root@node3 ~]# iptables -A INPUT -s 192.168.70.2 -j DROP; iptables -A OUTPUT -s 192.168.70.2 -j DROP; 
+	[root@node3 ~]# date; iptables -A INPUT -s node1 -j DROP; iptables -A OUTPUT -s node1 -j DROP
 
 **Isolate node3 only from node1**
 

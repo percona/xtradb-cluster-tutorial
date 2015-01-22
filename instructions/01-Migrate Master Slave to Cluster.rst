@@ -101,7 +101,7 @@ Make the mysqld section of node3:/etc/my.cnf look like this::
 	wsrep_provider                  = /usr/lib64/libgalera_smm.so
 
 	wsrep_cluster_name              = mycluster
-	wsrep_cluster_address           = gcomm://192.168.70.2,192.168.70.3,192.168.70.4
+	wsrep_cluster_address           = gcomm://node1,node2,node3
 	wsrep_node_name                 = node3
 	wsrep_node_address              = 192.168.70.4
 
@@ -239,7 +239,7 @@ Node2's my.cnf should look like this::
 	wsrep_provider                  = /usr/lib/libgalera_smm.so
 
 	wsrep_cluster_name              = mycluster
-	wsrep_cluster_address           = gcomm://192.168.70.2,192.168.70.3,192.168.70.4
+	wsrep_cluster_address           = gcomm://node1,node2,node3
 	wsrep_node_name                 = node2
 	wsrep_node_address              = 192.168.70.3
 
