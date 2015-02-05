@@ -13,7 +13,7 @@ Setup
 
 We will run our application workload on node1::
 
-	[root@node1 ~]# run_sysbench_oltp.lua
+	[root@node1 ~]# run_sysbench_oltp.sh
 
 Let's use node3 as the node we take in and out of the cluster with some kind of simulated failure.
 
