@@ -79,7 +79,7 @@ This creates a listen port on 9200 and will fork a clustercheck for each connect
 Now, install and start xinetd::
 
 	yum install xinetd
-	service xinetd restart
+	systemctl restart xinetd
 
 We can check if the service works via curl::
 
@@ -117,12 +117,21 @@ Now that we have working health checks, let's start configuring HAProxy.  For ou
 		contimeout 5000
 		clitimeout 50000
 		srvtimeout 50000
+		
+	# Stats interface
+	listen  lb_stats *:9999
+		mode    http
+		balance roundrobin
+		stats   uri /
+		stats   realm "HAProxy Stats"
+	
 
 We're not going to go over the options here, check the `HAProxy docs <http://haproxy.1wt.eu/#docs>`_ for more information.  
 
 Now, let's add a port that will load balance across all our nodes for reads by adding these lines to the end of the file we just created::
 
 	listen cluster-reads 0.0.0.0:5306
+		default-server on-marked-down shutdown-sessions
 		server node1 192.168.70.2:3306 check port 9200 
 		server node2 192.168.70.3:3306 check port 9200 
 		server node3 192.168.70.4:3306 check port 9200 
@@ -131,7 +140,7 @@ This is setting up a port 5306.  It will balance connections to the server with 
 
 Let's startup HAProxy to see if it's working::
 
-	service haproxy start
+	systemctl start haproxy
 
 
 Now connect through our HAProxy port (5306) and query the ``wsrep_node_name`` to see what node we are connected to::
@@ -156,6 +165,7 @@ Our reader port is a load-balanced rotation of all nodes.  However, for writes w
 Let's add the following config to the ``haproxy.cfg``::
 
 	listen cluster-writes 0.0.0.0:4306
+		default-server on-marked-down shutdown-sessions on-marked-up shutdown-backup-sessions
 		server node1 192.168.70.2:3306 track cluster-reads/node1
 		server node2 192.168.70.3:3306 track cluster-reads/node2 backup
 		server node3 192.168.70.4:3306 track cluster-reads/node3 backup
@@ -201,7 +211,7 @@ Now edit the /etc/keepalived/keepalived.conf file and add this::
 
 Now start keepalived on all the nodes::
 
-	service keepalived start
+	systemctl start keepalived
 	
 And check for which host has the VIP::
 
