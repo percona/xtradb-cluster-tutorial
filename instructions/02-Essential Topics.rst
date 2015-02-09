@@ -41,7 +41,7 @@ Testing IST
 
 Startup sysbench again on node1 (you may still have this running)::
 
-	[root@node1 ~]# sysbench --db-driver=mysql --test=sysbench_tests/db/oltp.lua --mysql-host=node1 --mysql-user=test --mysql-password=test --mysql-db=test --oltp-table-size=250000 --report-interval=1 --max-requests=0 --tx-rate=10 run | grep tps
+	[root@node1 ~]# run_sysbench_oltp.sh
 
 Now, we have traffic writing to node1.  
 

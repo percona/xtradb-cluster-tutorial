@@ -11,10 +11,7 @@ Setup
 
 We will run our application workload on node1::
 
-	[root@node1 ~]# 	sysbench --test=sysbench_tests/db/oltp.lua \
-	--mysql-host=node1 --mysql-user=test --mysql-db=test \
-	--oltp-table-size=250000 --report-interval=1 --max-requests=0 \
-	--tx-rate=10 run | grep tps
+	[root@node1 ~]# run_sysbench_oltp.sh
 
 Let's use node3 as the node we take in and out of the cluster with some kind of simulated failure.
 
@@ -78,21 +75,19 @@ We have wsrep_slave_threads=2 in our default configuration.  Compare the amount 
 - Compare the rate of 'Ops Dn' from myq_status -- what does this tell you about the rate at which node3 is processing transactions?
 
 
-Wsrep Causal Reads 
+Wsrep Sync Wait 
 -----------------------
 
-Transactions might be queued up when we go to read from another node, so to guarantee a consistent read we can enable wsrep_causal_reads.
+Transactions might be queued up when we go to read from another node, so to guarantee a consistent read we can set wsrep_sync_wait = 1.
 
-	node3 mysql> set session wsrep_causal_reads=1;
-	node3 mysql> select * from test.sbtest1 limit 1\G
+	node3 mysql> set global wsrep_sync_wait=1;	
+	[root@node3 ~]# time mysql -e "select * from test.sbtest1 limit 1"
 
 The select should work normally, but now take the read lock in another terminal and see what the select does if you run it again.
 
 - What does the select do while the queue is blocked?
 - What does the same query do with wsrep_causal_reads turned off when the queue is full?
-
-
-
+- wsrep_sync_wait is a bitmask from 1-7.  Check the PXC manual for what the different values mean.
 
 
 Taking backups
@@ -114,6 +109,8 @@ NOW if you run the backup, you may still see a brief period where the FTWRL is l
 
 	node3 mysql> set global wsrep_desync=OFF;
  
+Note that with Backup locks introduced in PXC 5.6.21, using wsrep_desync for this may no longer be necessary.
+
 
 Measuring maximum replication throughput
 ---------------------------------------------

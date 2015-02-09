@@ -21,7 +21,7 @@ Start up the application
 
 We will use sysbench to simulate application load on our master node, node1::
 
-  [root@node1 ~]# run_sysbench_update_oltp.sh
+  [root@node1 ~]# run_sysbench_oltp.sh
 
 The sysbench run should output the current transaction rate and response time every second.  
 
