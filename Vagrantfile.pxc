@@ -23,11 +23,12 @@ def build_box( config, name, ip, server_id )
       puppet.facter = {
         # PXC setup
         "percona_server_version"  => mysql_version,
-        'innodb_buffer_pool_size' => '128M',
-        'innodb_log_file_size' => '64M',
+        'innodb_buffer_pool_size' => '48M',
+        'innodb_log_file_size' => '24M',
         'innodb_flush_log_at_trx_commit' => '0',
         'pxc_bootstrap_node' => (server_id == 1 ? true : false ),
         'wsrep_cluster_address' => "gcomm://192.168.70.2,192.168.70.3, 192.168.70.4",
+        'extra_mysqld_config' => "performance_schema=OFF", # For memory consumption
         
         # Sysbench setup
         'sysbench_load' => (server_id == 1 ? true : false ),
@@ -36,18 +37,14 @@ def build_box( config, name, ip, server_id )
         'rows' => 250000,
         'threads' => 1,
         'tx_rate' => 10,
-        
-        # PCT setup
-        'percona_agent_api_key' => ENV['PERCONA_AGENT_API_KEY']
       }
     }
-
     
     # Uncomment the following when building Conference appliances
     # provision_puppet( config, "local_percona_repo.pp" )
 
     # Providers
-    provider_virtualbox( name, node_config, 256 ) { |vb, override|
+    provider_virtualbox( name, node_config, 384 ) { |vb, override|
       provision_puppet( override, "pxc_server.pp" ) {|puppet|
         puppet.facter = {
           'default_interface' => 'eth1',
@@ -56,7 +53,7 @@ def build_box( config, name, ip, server_id )
       }
     }
     
-    provider_vmware( name, node_config, 256 ) { |vb, override|
+    provider_vmware( name, node_config, 384 ) { |vb, override|
       provision_puppet( override, "pxc_server.pp" ) {|puppet|
         puppet.facter = {
           'default_interface' => 'eth1',

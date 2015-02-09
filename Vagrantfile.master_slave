@@ -23,10 +23,11 @@ def build_box( config, name, ip, server_id )
       puppet.facter = {
         # PXC setup
         "percona_server_version"  => mysql_version,
-        'innodb_buffer_pool_size' => '128M',
-        'innodb_log_file_size' => '64M',
+        'innodb_buffer_pool_size' => '48M',
+        'innodb_log_file_size' => '24M',
         'innodb_flush_log_at_trx_commit' => '0',
-				'server_id' => server_id,
+        'server_id' => server_id,
+        'extra_mysqld_config' => "performance_schema=OFF", # For memory consumption
         
         # Sysbench setup
         'sysbench_load' => (server_id == 1 ? true : false ),
@@ -39,11 +40,22 @@ def build_box( config, name, ip, server_id )
     }
     
 		# Providers
-		provider_virtualbox( name, node_config, 256 ) { |vb, override|
+		provider_virtualbox( name, node_config, 384 ) { |vb, override|
 			provision_puppet( override, "percona_server.pp" ) {|puppet|
-				puppet.facter = {"datadir_dev" => "dm-2"}
+				puppet.facter = {
+          'default_interface' => 'eth1',
+          "datadir_dev" => "dm-2"
+        }
 			}
 		}
+    provider_vmware( name, node_config, 384 ) { |vb, override|
+      provision_puppet( override, "pxc_server.pp" ) {|puppet|
+        puppet.facter = {
+          'default_interface' => 'eth1',
+          'datadir_dev' => 'dm-2',
+        }
+      }
+    }
 
 		provider_aws( name, node_config, 'm1.small') { |aws, override|
 			aws.block_device_mapping = [
