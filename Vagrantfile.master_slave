@@ -4,50 +4,50 @@
 require File.dirname(__FILE__) + '/lib/vagrant-common.rb'
 
 def build_box( config, name, ip, server_id )
-	mysql_version = "56"
-	config.vm.define name do |node_config|
-		node_config.vm.hostname = name
-		node_config.vm.network :private_network, ip: ip
-		
-		# Permanent port forwards to make Vbox appliances easy.
-		node_config.vm.network "forwarded_port", guest: 22, host: 22200 + server_id, protocol: 'tcp'
-		node_config.vm.network "forwarded_port", guest: 9999, host: 9990 + server_id, protocol: 'tcp'
-		
+  mysql_version = "56"
+  config.vm.define name do |node_config|
+    node_config.vm.hostname = name
+    node_config.vm.network :private_network, ip: ip
+    
+    # Permanent port forwards to make Vbox appliances easy.
+    node_config.vm.network "forwarded_port", guest: 22, host: 22200 + server_id, protocol: 'tcp'
+    node_config.vm.network "forwarded_port", guest: 9999, host: 9990 + server_id, protocol: 'tcp'
+
     # Provisioners
     node_config.vm.provision :hostmanager
-    
-		# Uncomment the following when building Conference appliances
-		provision_puppet( node_config, "local_percona_repo.pp" )
-    
+      
+    # Uncomment the following when building Conference appliances
+    provision_puppet( node_config, "local_percona_repo.pp" )
+
     provision_puppet( node_config, "percona_server.pp" ) { |puppet| 
-      puppet.facter = {
-        # PXC setup
-        "percona_server_version"  => mysql_version,
-        'innodb_buffer_pool_size' => '48M',
-        'innodb_log_file_size' => '24M',
-        'innodb_flush_log_at_trx_commit' => '0',
-        'server_id' => server_id,
-        'extra_mysqld_config' => "performance_schema=OFF", # For memory consumption
-        
-        # Sysbench setup
-        'sysbench_load' => (server_id == 1 ? true : false ),
-        'schema' => 'test',
-        'tables' => 1,
-        'rows' => 250000,
-        'threads' => 1,
-        'tx_rate' => 10,
-      }
+        puppet.facter = {
+            # PXC setup
+            "percona_server_version"  => mysql_version,
+            'innodb_buffer_pool_size' => '48M',
+            'innodb_log_file_size' => '24M',
+            'innodb_flush_log_at_trx_commit' => '0',
+            'server_id' => server_id,
+            'extra_mysqld_config' => "performance_schema=OFF", # For memory consumption
+            
+            # Sysbench setup
+            'sysbench_load' => (server_id == 1 ? true : false ),
+            'schema' => 'test',
+            'tables' => 1,
+            'rows' => 250000,
+            'threads' => 1,
+            'tx_rate' => 10,
+        }
     }
-    
-		# Providers
-		provider_virtualbox( name, node_config, 384 ) { |vb, override|
-			provision_puppet( override, "percona_server.pp" ) {|puppet|
-				puppet.facter = {
+
+    # Providers
+    provider_virtualbox( name, node_config, 384 ) { |vb, override|
+      provision_puppet( override, "percona_server.pp" ) {|puppet|
+        puppet.facter = {
           'default_interface' => 'eth1',
           "datadir_dev" => "dm-2"
         }
-			}
-		}
+      }
+    }
     provider_vmware( name, node_config, 384 ) { |vb, override|
       provision_puppet( override, "pxc_server.pp" ) {|puppet|
         puppet.facter = {
@@ -57,29 +57,28 @@ def build_box( config, name, ip, server_id )
       }
     }
 
-		provider_aws( name, node_config, 'm1.small') { |aws, override|
-			aws.block_device_mapping = [
-				{
-					'DeviceName' => "/dev/sdb",
-					'VirtualName' => "ephemeral0"
-				}
-			]
-			provision_puppet( override, "percona_server.pp" ) {|puppet|
-				puppet.facter = {"datadir_dev" => "xvdb"}
-			}
-		}
-	end
+    provider_aws( name, node_config, 'm1.small') { |aws, override|
+      aws.block_device_mapping = [
+        {
+          'DeviceName' => "/dev/sdb",
+          'VirtualName' => "ephemeral0"
+        }
+      ]
+      provision_puppet( override, "percona_server.pp" ) {|puppet|
+        puppet.facter = {"datadir_dev" => "xvdb"}
+      }
+    }
+  end
 end
 
-
 Vagrant.configure("2") do |config|
-	config.vm.box = "perconajayj/centos-x86_64"
-	config.vm.box_version = "~> 7.0"
-	config.ssh.username = "root"
-	
-	build_box( config, 'node1', '192.168.70.2', 1 )
-	build_box( config, 'node2', '192.168.70.3', 2 )
-	build_box( config, 'node3', '192.168.70.4', 3 )
+  config.vm.box = "perconajayj/centos-x86_64"
+  config.vm.box_version = "~> 7.0"
+  config.ssh.username = "root"
+  
+  build_box( config, 'node1', '192.168.70.2', 1 )
+  build_box( config, 'node2', '192.168.70.3', 2 )
+  build_box( config, 'node3', '192.168.70.4', 3 )
 end
 
 
