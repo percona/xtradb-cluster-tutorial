@@ -49,7 +49,7 @@ def build_box( config, name, ip, server_id )
       }
     }
     provider_vmware( name, node_config, 384 ) { |vb, override|
-      provision_puppet( override, "pxc_server.pp" ) {|puppet|
+      provision_puppet( override, "percona_server.pp" ) {|puppet|
         puppet.facter = {
           'default_interface' => 'eth1',
           'datadir_dev' => 'dm-2',
