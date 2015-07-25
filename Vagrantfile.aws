@@ -1,0 +1,111 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+ENV['VAGRANT_DEFAULT_PROVIDER'] = 'aws'
+
+require File.dirname(__FILE__) + '/lib/vagrant-common.rb'
+
+numTeams = 13
+
+options = {}
+options['region'] = ENV['AWS_REGION'] || 'us-east-1'
+options['suffix'] = ENV['SUFFIX'] || nil
+options['count'] = ENV['NUM_TEAMS'] || nil
+options['offset'] = ENV['TEAM_OFFSET'] || 0
+
+def build_box( config, name, ip, server_id, tags = nil )
+    mysql_version = "56"
+    config.vm.define name do |node_config|
+        node_config.vm.hostname = name
+        #node_config.vm.network :private_network, ip: ip
+        
+        # Permanent port forwards to make Vbox appliances easy.
+        #node_config.vm.network "forwarded_port", guest: 22, host: 22200 + server_id, protocol: 'tcp'
+        #node_config.vm.network "forwarded_port", guest: 9999, host: 9990 + server_id, protocol: 'tcp'
+        
+        # Provisioners
+        node_config.vm.provision :hostmanager
+        
+        # Uncomment the following when building Conference appliances
+        #provision_puppet( node_config, "local_percona_repo.pp" )
+        
+        provision_puppet( node_config, "percona_server.pp" ) { |puppet|
+            puppet.facter = {
+                # PXC setup
+                "percona_server_version"  => mysql_version,
+                'innodb_buffer_pool_size' => '48M',
+                'innodb_log_file_size' => '24M',
+                'innodb_flush_log_at_trx_commit' => '0',
+                'server_id' => server_id,
+                'extra_mysqld_config' => "performance_schema=OFF", # For memory consumption
+                
+                # Sysbench setup
+                'sysbench_load' => (server_id == 1 ? true : false ),
+                'schema' => 'test',
+                'tables' => 1,
+                'rows' => 250000,
+                'threads' => 1,
+                'tx_rate' => 10,
+            }
+        }
+        
+        # Providers
+        provider_virtualbox( name, node_config, 384 ) { |vb, override|
+            provision_puppet( override, "percona_server.pp" ) {|puppet|
+                puppet.facter = {
+                    'default_interface' => 'eth1',
+                    "datadir_dev" => "dm-2"
+                }
+            }
+        }
+    
+        provider_vmware( name, node_config, 384 ) { |vb, override|
+            provision_puppet( override, "percona_server.pp" ) {|puppet|
+                puppet.facter = {
+                    'default_interface' => 'eth1',
+                    'datadir_dev' => 'dm-2',
+                }
+            }
+        }
+
+        provider_aws( name, node_config, 'm3.medium') { |aws, override|
+            aws.terminate_on_shutdown = true
+            aws.subnet_id = 'subnet-8b751ed2'
+            aws.associate_public_ip = true
+            aws.tags = tags
+            aws.block_device_mapping = [
+                {
+                    'DeviceName' => "/dev/xvdb",
+                    'VirtualName' => "ephemeral0"
+                }
+            ]
+            provision_puppet( override, "percona_server.pp" ) {|puppet|
+                puppet.facter = {
+                    "datadir_dev" => "xvdb",
+                    'vagrant_hostname' => name
+                }
+            }
+        }
+    end
+end
+
+Vagrant.configure("2") do |config|
+    config.vm.box = "perconajayj/centos-x86_64"
+    config.vm.box_version =~ "7"
+    config.ssh.username = "root"
+    
+    (1..numTeams).each do |i|
+        
+        teamNum = options['offset'].to_i + i
+        
+        (1..3).each do |j|
+            
+            host_name = 'node' + j.to_s + '-T' + teamNum.to_s
+            tag_name = 'Percona-Training-' + options['suffix'] + '-' + host_name
+            
+            tags = { 'Name' => tag_name }
+            
+            build_box( config, host_name, '192.168.70.1', j, tags )
+        end
+    end
+end  
