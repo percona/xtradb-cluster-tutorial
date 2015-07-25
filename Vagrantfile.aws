@@ -5,13 +5,28 @@ ENV['VAGRANT_DEFAULT_PROVIDER'] = 'aws'
 
 require File.dirname(__FILE__) + '/lib/vagrant-common.rb'
 
-numTeams = 13
-
 options = {}
 options['region'] = ENV['AWS_REGION'] || 'us-east-1'
 options['suffix'] = ENV['SUFFIX'] || nil
 options['count'] = ENV['NUM_TEAMS'] || nil
 options['offset'] = ENV['TEAM_OFFSET'] || 0
+options['subnetid'] = ENV['VPCID'] || nil
+
+# Some sanity checks
+if (options['suffix'] == nil)
+	puts "Error: You must supply 3-4 letter node suffix. ($ENV[SUFFIX])\n"
+	exit
+end
+
+if (options['count'] == nil)
+	puts "Error: You must supply a number of teams. Use 1 if just you. ($ENV[NUM_TEAMS])\n"
+	exit
+end
+
+if (options['subnetid'] == nil)
+	puts "Error: You must supply a VPC ID. ($ENV[VPCID])\n"
+	exit
+end
 
 def build_box( config, name, ip, server_id, tags = nil )
     mysql_version = "56"
