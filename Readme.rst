@@ -81,8 +81,7 @@ Initialize the submodule
 This tutorial is based on vagrant tools in another repo that is a submodule of this git repo.  To initialize this::
 
 	host> cd xtradb-cluster-tutorial
-	host> git submodule init
-	host> git submodule update
+	host> git submodule update --init --recursive
 
 vagrant up
 ~~~~~~~~~~
