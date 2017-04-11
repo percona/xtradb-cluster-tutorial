@@ -1,3 +1,4 @@
 [submodule "vagrant-percona"]
 	path = vagrant-percona
 	url = https://github.com/grypyrg/vagrant-percona.git
+	branch = master
