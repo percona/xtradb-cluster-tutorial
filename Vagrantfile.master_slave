@@ -1,10 +1,14 @@
 # -*- mode: ruby -*-
 # vi: set ft=ruby :
 
+# To create multiple slaves, read the instructions near the end
+# of this file.
+
 require File.dirname(__FILE__) + '/lib/vagrant-common.rb'
 
 def build_box( config, name, ip, server_id )
-  mysql_version = "56"
+  mysql_version = "57"
+
   config.vm.define name do |node_config|
     node_config.vm.hostname = name
     node_config.vm.network :private_network, ip: ip
@@ -48,6 +52,7 @@ def build_box( config, name, ip, server_id )
         }
       }
     }
+
     provider_vmware( name, node_config, 384 ) { |vb, override|
       provision_puppet( override, "percona_server.pp" ) {|puppet|
         puppet.facter = {
@@ -72,9 +77,9 @@ def build_box( config, name, ip, server_id )
 end
 
 Vagrant.configure("2") do |config|
-  config.vm.box = "perconajayj/centos-x86_64"
+  config.vm.box = "grypyrg/centos-x86_64"
   config.vm.box_version = "~> 7.0"
-  config.ssh.username = "root"
+  config.ssh.username = "vagrant"
   
   build_box( config, 'node1', '192.168.70.2', 1 )
   build_box( config, 'node2', '192.168.70.3', 2 )
