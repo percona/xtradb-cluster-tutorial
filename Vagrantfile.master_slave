@@ -32,7 +32,8 @@ def build_box( config, name, ip, server_id )
             'innodb_flush_log_at_trx_commit' => '0',
             'server_id' => server_id,
             'extra_mysqld_config' => "performance_schema=OFF", # For memory consumption
-            
+            'cluster_servers' => name,
+
             # Sysbench setup
             'sysbench_load' => (server_id == 1 ? true : false ),
             'schema' => 'test',
