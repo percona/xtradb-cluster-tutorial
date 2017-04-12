@@ -1,4 +1,4 @@
-# Percona XtraDB Cluster Tutorial AWS Setup
+# Percona XtraDB Cluster Tutorial - AWS
 
 You can skip this if you aren't planning on using AWS.  
 
