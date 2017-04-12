@@ -46,6 +46,7 @@ def build_box( config, name, ip, server_id )
 
     # Providers
     provider_virtualbox( name, node_config, 384 ) { |vb, override|
+      vb.linked_clone = true
       provision_puppet( override, "percona_server.pp" ) {|puppet|
         puppet.facter = {
           'default_interface' => 'eth1',
