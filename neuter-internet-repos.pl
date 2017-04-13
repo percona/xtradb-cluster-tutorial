@@ -20,7 +20,7 @@ foreach my $line( @running_nodes_lines ) {
 foreach my $node( @running_nodes ) {
 	print $node->{name} . " disabling\n";
 
-	`vagrant ssh $node->{name} -c "mkdir /etc/yum.repos.internet"`;
-	`vagrant ssh $node->{name} -c "mv /etc/yum.repos.d/* /etc/yum.repos.internet"`;
-	`vagrant ssh $node->{name} -c "cp /etc/yum.repos.internet/local.repo /etc/yum.repos.d"`;
+	`vagrant ssh $node->{name} -c "sudo mkdir /etc/yum.repos.internet; \
+sudo mv /etc/yum.repos.d/* /etc/yum.repos.internet; \
+sudo cp /etc/yum.repos.internet/local.repo /etc/yum.repos.d"`;
 }
