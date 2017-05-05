@@ -25,9 +25,9 @@ This tutorial uses Virtualbox and Vagrant.  Follow these steps to get setup:
 #. `Download and install Vagrant`_: http://vagrantup.com (at least Vagrant 1.7)
 #. `Get a copy of this repository`_: ``git clone https://github.com/percona/xtradb-cluster-tutorial.git``
 #. `Initialize the submodule`_: ``cd xtradb-cluster-tutorial; git submodule update --init --recursive``
-#. `vagrant up`_:: ``vagrant up``
-#. `Ensure they all know each other's IP`_:: ``vagrant provision --provision-with hostmanager``
-#. `Setup Master/Slave`_:: ``./ms-setup.pl``
+#. `vagrant up`_: ``vagrant up``
+#. Ensure they all know each other's IP: ``vagrant provision --provision-with hostmanager``
+#. Setup Master/Slave: ``./ms-setup.pl``
 
 **NOTE** During the in-class tutorial, using Vagrant will not strictly be required.  
 
