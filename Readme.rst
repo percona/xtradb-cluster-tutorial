@@ -9,14 +9,12 @@ This tutorial was written for Percona employees to give at conferences in either
    :backlinks: entry
    :local:
 
-
 How to work through this Tutorial
 ---------------------------------
 
 .. note:: **STOP** If you are attending a tutorial, you will receive alternative instructions that do not require you to download anything significant from the Internet.  You can use these instructions to prepare your environment, but it should not be strictly necessary.
 
-The basic flow of working with this tutorial is to setup your environment and then work the module or modules of your choosing documented in the instructions folder.  
-
+The basic flow of working with this tutorial is to setup your environment and then work the module or modules of your choosing documented in the instructions folder.
 
 Creating the Tutorial Environment (short version)
 -------------------------------------------------
@@ -26,19 +24,17 @@ This tutorial uses Virtualbox and Vagrant.  Follow these steps to get setup:
 #. `Download and install Virtualbox`_: http://virtualbox.org
 #. `Download and install Vagrant`_: http://vagrantup.com (at least Vagrant 1.7)
 #. `Get a copy of this repository`_: ``git clone https://github.com/percona/xtradb-cluster-tutorial.git``
-#. `Initialize the submodule`_: ``cd xtradb-cluster-tutorial; git submodule init; git submodule update``
-#. `vagrant up`_:: ``cd xtradb-cluster-tutorial; vagrant up``
+#. `Initialize the submodule`_: ``cd xtradb-cluster-tutorial; git submodule update --init --recursive``
+#. `vagrant up`_:: ``vagrant up``
 #. `Ensure they all know each other's IP`_:: ``vagrant provision --provision-with hostmanager``
+#. `Setup Master/Slave`_:: ``./ms-setup.pl``
 
 **NOTE** During the in-class tutorial, using Vagrant will not strictly be required.  
-
 
 Topics covered in this Tutorial
 -------------------------------
 
 Tutorial steps can be found in the 'instructions' directory.
-
-
 
 Creating the Tutorial Environment (Detailed Setup Steps)
 --------------------------------------------------------
@@ -50,10 +46,8 @@ Virtualbox can run virtual machines on your laptop and supports Linux, Mac, and 
 
 Download Virtualbox from `here <https://www.virtualbox.org/wiki/Downloads>`_.
 
-
 Download and install Vagrant
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 
 Vagrant knows how to setup and manipulate a set of VirtualBox VMs using something called a *VagrantFile*, which is somewhat analogous to a *MakeFile*.
 
@@ -70,10 +64,7 @@ You can also fetch this from github over the internet::
 
 	host> git clone https://github.com/percona/xtradb-cluster-tutorial.git
 
-(Be sure to use the path to the branch of your choosing)
-
 You will need a local copy of all the code and configuration in this git repository on your local machine.  If you don't have/like git, you can download it a full tarball/zip file from github.
-
 
 Initialize the submodule
 ~~~~~~~~~~~~~~~~~~~~~~~~
@@ -91,38 +82,35 @@ vagrant up
 	cd percona-xtradb-cluster-tutorial
 	vagrant up
 
-Sometimes some race conditions creep into the provisioning in the ``vagrant up`` causing errors, in such cases it's generally safe to either re-run ``vagrant up`` or ``vagrant provision``.
+Sometimes a race condition can creep into the provisioning in the ``vagrant up`` causing errors, in such cases it's generally safe to either re-run ``vagrant up`` or ``vagrant provision``.
 
 *If *``vagrant up``* doesn't work, be sure you are in the root directory of this repository and you see a Vagrantfile!*
 
-``vagrant up`` sets up all the cluster nodes and PXC according to the rules found in the VagrantFile (and subsequent Puppet configuration).  
+``vagrant up`` sets up 3 MySQL VMs according to the rules found in the VagrantFile (and subsequent Puppet configuration).
 
 **If all went correctly, you should now have 3 virtual machines ready for tutorial work!**
-
 
 Problems with the setup
 -----------------------
 
-There are occasions where the ``vagrant up`` command can generate some errors and not fully complete.  All examples of this I have seen tend to be recoverable by trying a few workaround steps until the nodes are up and the provisioning (i.e. puppet) completes successfully.  Sometimes it's helpful to try the following commands only on the specific node having the issue.  The nodes are named ``node1``, ``node2``, ``node3`` and you can add them to the end of most (all?) vagrant commands to work only on that specific node.  
+There are occasions where the ``vagrant up`` command can generate some errors and not fully complete.  All examples of this tend to be recoverable by trying a few workaround steps until the nodes are up and the provisioning (i.e. puppet) completes successfully.  Sometimes it's helpful to try the following commands only on the specific node having the issue.  The nodes are named ``node1``, ``node2``, ``node3`` and you can add them to the end of most vagrant commands to work only on that specific node.  
 
 - If the node appears to boot, but Puppet fails, try rerunning ``vagrant provision``
 - If the node appears to boot, but you can't ssh to it and it appears hung, first try ``vagrant halt <nodename>`` and if that doesn't work ``vagrant halt -f <nodename>``
 - With VirtualBox 4.2, I got it to work by running (for each node) ``vagrant up <nodename>; vagrant halt <nodename>; vagrant up <nodename>``
 - If you are still stuck, be sure you have the most recent version of this git repository and try again.
-- If you can't solve it, please `open an issue <https://github.com/jayjanssen/percona-xtradb-cluster-tutorial/issues>`_ with the details of your environment (OS, Vagrant and Virtualbox versions).
-
+- If you can't solve it, please `open an issue <https://github.com/percona/xtradb-cluster-tutorial/issues>`_ with the details of your environment (OS, Vagrant and Virtualbox versions).
 
 Can my machine handle this?
 ---------------------------
 
-- Currently the Vagrant file downloads a single CentOS base box that is around 300MB.  
-- It creates 3 individual Virtual machines that each use 256M of RAM.  
-- Unpacked and fully installed, each machine takes ~1.3G of disk space.  
-- These are 32-bit VMs, with a single virtual CPU each.
-- I have taken steps to try to minimize the CPU utilization during the modules, but there might be some cases where it gets somewhat high during some of the experiments.
+- Vagrant downloads a single CentOS base image that is around 300MB.
+- It creates 3 individual Virtual machines that each use 256M of RAM.
+- Unpacked and fully installed, each machine takes ~1.3G of disk space.
+- These are 64-bit VMs, with a single virtual CPU each.
+- Steps have been taken to try to minimize the CPU utilization during the tutorial, but there might be some cases where it gets somewhat high during some of the experiments.
 
-
-Things you can do with vagrant
+Things you can do with Vagrant
 ------------------------------
 
 `vagrant up`
@@ -143,9 +131,7 @@ Things you can do with vagrant
 `vagrant destroy -f`
 	Forcibly destroy all the VMs Vagrant has setup in this working directory (doesn't affect other Vagrant projects).  Using this and another `vagrant up` you can reset back to a baseline config, although it's usually not necessary to go this far.
 
-
 **NOTE** You can read more at http://docs.vagrantup.com/
-
 
 To log into a node
 ------------------
@@ -155,7 +141,6 @@ To log into a node
 	Last login: Thu Aug  9 18:34:53 2012 from 10.0.2.2
 	[vagrant@node2 ~]$ sudo -i
 	[root@node2 ~]#
-
 
 Notes
 -----
@@ -174,9 +159,6 @@ Notes
 
 - You can remove the cluster state on a node without affecting the data on that node by removing::
 	/var/lib/mysql/grastate.dat
-
-- Sometimes init.d loses track of a mysqld instance.  If you can't shutdown mysqld with ``service mysql stop``, try ``mysqladmin shutdown``.  If that doesn't work, try ``killall mysqld_safe; killall mysqld``
-
 
 Terms and conventions
 ---------------------
@@ -201,7 +183,6 @@ Vagrant
 	
 screen#
 	Often the walkthrough instructions assume you have multiple windows or screens open so you can watch multiple things at once.  This can be a physically separate terminal window, or a unix `screen` window if you are comfortable with it.  Note that `screen` is preinstalled on the nodes for your convenience.
-
 
 Ways to test the Cluster
 ------------------------
@@ -236,25 +217,16 @@ One node1, let's monitor the heartbeat::
 	   0s [  0.00s,  0.00s,  0.00s ]
 	   0s [  0.00s,  0.00s,  0.00s ]
 
-This output will show us if there are any delays in the heartbeat compared with the current time.  
-
+This output will show us if there are any delays in the heartbeat compared with the current time.
 
 Monitoring commit latency
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
-To illustrate high client write latency, I have created a script called ``quick_update.pl``, which should be in your path.  This script does the following:
-	- Runs the same UPDATE command that pt-heartbeat does, though with only 10ms of sleep between each execution. It updates and prints a counter on each execution. 
+To illustrate high client write latency, there is a script called ``quick_update.pl``, which should be in your $PATH. This script does the following:
+	- Runs the same UPDATE command that ``pt-heartbeat`` does, though with only 10ms of sleep between each execution. It updates and prints a counter on each execution.
 	- If it detects any of the UPDATEs took more than 50ms (this is configurable if you edit the script), then it prints 'slow', the date timestamp, and the final query latency is printed (in seconds) when the query does finish.  
 
-If you haven't done so yet, create the ``percona`` schema and the ``heartbeat`` table as per the last section::  
-
-	node2 mysql> create schema percona;
-	use percona;
-	CREATE TABLE heartbeat (
-		id int NOT NULL PRIMARY KEY,
-		ts datetime NOT NULL
-	);
-	insert into heartbeat (id, ts) values (1, NOW());
+If you haven't done so yet, create the ``percona`` schema and the ``heartbeat`` table as per the last section.
 	
 The execution looks something like::
 
@@ -263,26 +235,14 @@ The execution looks something like::
 	slow: Wed Aug 15 15:01:19 CEST 2012 0.139s
 	10428
 
-Note that occasionally the writes to the 3 node cluster setup on VMs on your laptop might be sporadically slow. This can be taken as noise.  
-
+Note that occasionally the writes to the 3 node cluster setup on VMs on your laptop might be sporadically slow. This can be taken as noise.
 
 Using sysbench to generate load
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-To simulate a live environment, we will kick off setup and kickoff a sysbench oltp test with a single test thread.
+To simulate a live environment, we will kick off setup and kickoff a sysbench oltp test with a single test thread.::
 
-**Prepare the test table**
-
-::
-
-	[root@node1 ~]# sysbench --test=sysbench_tests/db/common.lua --mysql-user=root --mysql-db=test --oltp-table-size=250000 prepare
-
-
-**Start a Test run**
-
-::
-
-	[root@node1 ~]# sysbench --test=sysbench_tests/db/oltp.lua --mysql-user=root --mysql-db=test --oltp-table-size=250000 --report-interval=1 --max-requests=0 --tx-rate=10 run | grep tps
+	[root@node1 ~]# /usr/local/bin/run_sysbench_oltp.sh
 	[   1s] threads: 1, tps: 11.00, reads/s: 154.06, writes/s: 44.02, response time: 41.91ms (95%)
 	[   2s] threads: 1, tps: 18.00, reads/s: 252.03, writes/s: 72.01, response time: 24.02ms (95%)
 	[   3s] threads: 1, tps: 9.00, reads/s: 126.01, writes/s: 36.00, response time: 20.74ms (95%)
@@ -292,30 +252,19 @@ To simulate a live environment, we will kick off setup and kickoff a sysbench ol
 	[   7s] threads: 1, tps: 13.00, reads/s: 181.99, writes/s: 52.00, response time: 21.09ms (95%)
 	[   8s] threads: 1, tps: 13.00, reads/s: 181.99, writes/s: 52.00, response time: 23.71ms (95%)
 
-Your performance may vary.  Note we are setting ``--tx-rate`` as a way to prevent your VMs from working too hard.  Feel free to adjust ``-tx-rate`` accordingly, but be sure that you have several operations a second for the following tests.  
+Your performance may vary.  If you examine the script, you will note the setting ``--tx-rate`` as a way to prevent your VMs from working too hard.  Feel free to adjust ``-tx-rate`` accordingly, but be sure that you have several operations a second for the following tests.  
 
-As the WARNING message indicates, this test will go forever until you ``Ctrl-C`` it.  You can kill and restart this test at any time
+This test will go forever until you ``Ctrl-C`` it.  You can kill and restart this test at any time.
 
 **Cleanup test table**
 
 Note that if you mess something up, you can cleanup the test table and start these steps over if needed::
 
-	[root@node1 ~]# sysbench --test=sysbench_tests/db/common.lua --mysql-user=root --mysql-db=test cleanup
-	sysbench 0.5:  multi-threaded system evaluation benchmark
-
-	Dropping table 'sbtest1'...
-
-
+	[root@node1 ~]# /usr/local/bin/run_sysbench_reload.sh
 
 Contributors
 ------------
 
-This repository is free to branch, open issues on, and submit pull requests to.  
-
-I've opened a set of issues for new modules to be written.  If you want to contribute, take the issue, branch the repo, do your changes, and submit a pull request.  I will make an effort now to use branches myself and keep the master branch clean apart from pull merges.
+This repository is free to branch, open issues on, and to submit pull requests.
 
 Any review/testing/proofreading you can do would be much appreciated.
-
-
-
-
