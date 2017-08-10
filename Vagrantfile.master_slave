@@ -36,7 +36,7 @@ def build_box( config, name, ip, server_id )
 
             # Sysbench setup
             'sysbench_load' => (server_id == 1 ? true : false ),
-            'rows' => 1500000,
+            'rows' => 500000,
             'tx_rate' => 10,
         }
     }
